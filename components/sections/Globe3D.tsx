@@ -260,7 +260,7 @@ export default function Globe3D() {
     const position = marker.getLatLng();
     setLocations(prev => {
       const updated = prev.map(loc => 
-        loc.id === id ? { ...loc, coords: [position.lat, position.lng] } : loc
+        loc.id === id ? { ...loc, coords: [position.lat, position.lng] as [number, number] } : loc
       );
       localStorage.setItem('map_locations', JSON.stringify(updated));
       return updated;

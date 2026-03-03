@@ -29,13 +29,13 @@ const mockAlbums: Album[] = [
   {
     id: 5,
     title: 'Red String',
-    cover: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=300&h=300&fit=crop',
+    cover: '/images/Album/3.webp',
     month: 'April',
     year: 2017,
     photos: [
       {
         id: 101,
-        image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600',
+        image: '/images/Album/3.webp',
         story: 'Awal mula benang merah kita terjalin. Takdir yang membawa kita sampai di titik ini.',
         date: 'April 2017',
         emotion: 'Destiny ❤️',
@@ -45,45 +45,45 @@ const mockAlbums: Album[] = [
   {
     id: 1,
     title: 'First Date',
-    cover: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=300&h=300&fit=crop',
+    cover: '/images/Album/4.webp',
     month: 'Desember',
     year: 2025,
     photos: [
       {
         id: 1,
-        image: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600',
+        image: '/images/Album/4.webp',
         story: 'Our first date! I was so nervous karena lama ngga ketemuu. Bahagiaa koo meski agak gugup',
         date: '28 Desember 2025',
-        emotion: 'Bahagia dengan sedikit gugup 💕',
+        emotion: 'happy but a lil nervous 💕',
       },
     ],
   },
   {
     id: 2,
     title: 'Valentine Special',
-    cover: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop',
+    cover: '/images/Album/5.mp4',
     month: 'Februari',
     year: 2026,
     photos: [
       {
         id: 1,
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600',
-        story: 'Valentine ini spesial... kita LDR, tapi hati kita selalu bersama.',
+        image: '/images/Album/5.mp4',
+        story: 'Valentine ini spesial... kita LDR,',
         date: '14 Februari 2026',
-        emotion: 'Penuh kasih sayang 🥰',
+        emotion: 'My lovely Valentine Gift 🥰',
       },
     ],
   },
   {
     id: 4,
     title: 'Late Night Calls',
-    cover: 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?w=300&h=300&fit=crop',
+    cover: '/images/Album/12.webp',
     month: 'Februari - Maret',
     year: 2026,
     photos: [
       {
         id: 1,
-        image: 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?w=600',
+        image: '/images/Album/12.webp',
         story: 'Screenshot pas kita video call sampe ketiduran.',
         date: '1 Maret 2026',
         emotion: 'Rindu itu berat 🥺',
@@ -93,6 +93,32 @@ const mockAlbums: Album[] = [
 ];
 
 // --- Layout Components ---
+
+const renderMedia = (src: string, className: string, onClick?: () => void) => {
+  const isVideo = src.toLowerCase().match(/\.(mp4|mov|webm)$/);
+  if (isVideo) {
+    // Special handling for 8.mp4 rotation
+    const isRotated = src.includes('8.mp4');
+    let finalClassName = className;
+    
+    if (isRotated) {
+      finalClassName = className.replace('object-cover', 'object-contain') + ' rotate-[-90deg] scale-[1.7]';
+    }
+
+    return (
+      <video
+        src={src}
+        className={finalClassName}
+        onClick={onClick}
+        autoPlay
+        muted
+        loop
+        playsInline
+      />
+    );
+  }
+  return <img src={src} alt="memory" className={className} onClick={onClick} />;
+};
 
 const PolaroidLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) => void }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -119,7 +145,7 @@ const PolaroidLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) =
         className="bg-white p-3 pb-10 md:p-4 md:pb-12 shadow-xl rotate-2 relative max-w-[85%]"
       >
         <div className="aspect-square overflow-hidden bg-gray-100 mb-2 border border-gray-100 cursor-zoom-in" onClick={() => onZoom(data.image)}>
-          <img src={data.image} alt="memory" className="w-full h-full object-cover filter contrast-110 pointer-events-none" />
+          {renderMedia(data.image, "w-full h-full object-cover filter contrast-110 pointer-events-none")}
         </div>
         <p className="font-playfair text-center text-gray-800 absolute bottom-4 left-0 right-0 italic text-sm pointer-events-none">{data.date}</p>
       </motion.div>
@@ -135,7 +161,7 @@ const PolaroidLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) =
 
 const FullLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) => void }) => (
   <div className="relative w-full h-full overflow-hidden">
-    <img src={data.image} alt="memory" className="w-full h-full object-cover cursor-zoom-in" onClick={() => onZoom(data.image)} />
+    {renderMedia(data.image, "w-full h-full object-cover cursor-zoom-in", () => onZoom(data.image))}
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 text-white">
       <div className="border-l-4 border-teal-400 pl-4">
         <p className="font-playfair text-2xl font-bold mb-2">{data.date}</p>
@@ -304,7 +330,7 @@ const ScrapbookLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) 
       {/* Photo */}
       <div className="relative bg-white p-2 shadow-lg rotate-[-3deg] border-4 border-white max-w-[80%] mx-auto z-10 mt-2">
           <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-8 bg-rose-200/80 rotate-1 shadow-sm z-10"></div>
-          <img src={data.image} alt="memory" className="w-full aspect-[4/3] object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-500 cursor-zoom-in" onClick={() => onZoom(data.image)} />
+          {renderMedia(data.image, "w-full aspect-[4/3] object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-500 cursor-zoom-in", () => onZoom(data.image))}
       </div>
       
       {/* Note */}
@@ -468,14 +494,14 @@ const ConfessionLayout = ({ part }: { part: 1 | 2 }) => (
 
 const CollageLayout = ({ text, subtext, variant, onZoom }: { text: string, subtext?: string, variant: 1 | 2, onZoom: (url: string) => void }) => {
   const photos1 = [
-    'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600&h=600&fit=crop',
+    '/images/Album/6.webp',
+    '/images/Album/7.webp',
+    '/images/Album/8.mp4',
   ];
   const photos2 = [
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1494822893917-64971a432d2a?w=600&h=600&fit=crop',
-    'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?w=600&h=600&fit=crop',
+    '/images/Album/9.webp',
+    '/images/Album/10.webp',
+    '/images/Album/11.mov',
   ];
 
   return (
@@ -496,12 +522,7 @@ const CollageLayout = ({ text, subtext, variant, onZoom }: { text: string, subte
                   ? 'border-4 border-white transform hover:scale-105 ' + (i === 2 ? 'col-span-2 aspect-[2/1]' : 'aspect-square')
                   : 'border-2 border-gray-200 hover:shadow-xl ' + (i === 0 ? 'col-span-2 aspect-[16/9]' : 'col-span-1 aspect-[4/3]')
              }`}>
-                 <img 
-                    src={src} 
-                    className="w-full h-full object-cover cursor-zoom-in" 
-                    alt="collage" 
-                    onClick={() => onZoom(src)}
-                 />
+                 {renderMedia(src, "w-full h-full object-cover cursor-zoom-in", () => onZoom(src))}
              </div>
          ))}
       </div>
@@ -523,26 +544,16 @@ const FutureLayout = ({ onZoom }: { onZoom: (url: string) => void }) => (
     </div>
 
     <div className="flex-1 w-full flex flex-col items-center justify-center gap-2 md:gap-3 max-w-5xl z-10">
-      <div className="flex flex-col items-center w-full max-w-[170px] md:max-w-[240px]">
+      <div className="flex flex-col items-center w-full max-w-[170px] md:max-w-[240px] mt-6">
         <div className="w-full aspect-[16/9] bg-white p-1 md:p-2 shadow-xl rotate-[-2deg] hover:rotate-0 transition-transform duration-300 rounded-sm border border-gray-100">
-           <img 
-             src="https://images.unsplash.com/photo-1519238263496-63f82a0ef963?w=600&h=450&fit=crop" 
-             alt="Boy" 
-             className="w-full h-full object-cover cursor-zoom-in"
-             onClick={() => onZoom("https://images.unsplash.com/photo-1519238263496-63f82a0ef963?w=800")}
-           />
+           {renderMedia("/images/Album/13.webp", "w-full h-full object-cover cursor-zoom-in", () => onZoom("/images/Album/13.webp"))}
         </div>
         <span className="mt-1 md:mt-2 text-blue-600 font-bold text-[10px] md:text-sm bg-white/80 px-2 py-0.5 md:px-3 md:py-1 rounded-full shadow-sm backdrop-blur-sm">Boy 👦</span>
       </div>
       
       <div className="flex flex-col items-center w-full max-w-[170px] md:max-w-[240px]">
         <div className="w-full aspect-[16/9] bg-white p-1 md:p-2 shadow-xl rotate-[2deg] hover:rotate-0 transition-transform duration-300 rounded-sm border border-gray-100">
-           <img 
-             src="https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=600&h=450&fit=crop" 
-             alt="Girl" 
-             className="w-full h-full object-cover cursor-zoom-in"
-             onClick={() => onZoom("https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=800")}
-           />
+           {renderMedia("/images/Album/14.webp", "w-full h-full object-cover cursor-zoom-in", () => onZoom("/images/Album/14.webp"))}
         </div>
         <span className="mt-1 md:mt-2 text-pink-600 font-bold text-[10px] md:text-sm bg-white/80 px-2 py-0.5 md:px-3 md:py-1 rounded-full shadow-sm backdrop-blur-sm">Girl 👧</span>
       </div>
@@ -566,7 +577,7 @@ const generatePages = (albums: Album[]) => {
     type: 'full', 
     data: {
       id: 998,
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop',
+      image: '/images/Album/1.webp',
       story: 'Trystan Adrian Hanggara Wibawa',
       date: 'The King',
       emotion: '👑',
@@ -578,7 +589,7 @@ const generatePages = (albums: Album[]) => {
     type: 'full', 
     data: {
       id: 999,
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop',
+      image: '/images/Album/2.webp',
       story: 'Dhinda Aura Sukma',
       date: 'The Queen',
       emotion: '👸',
@@ -909,6 +920,11 @@ export default function Album() {
               onClick={(e) => e.stopPropagation()}
             >
               <img src={zoomedImage} alt="Zoomed memory" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" />
+              {zoomedImage.toLowerCase().match(/\.(mp4|mov|webm)$/) ? (
+                <video src={zoomedImage} className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" controls autoPlay />
+              ) : (
+                <img src={zoomedImage} alt="Zoomed memory" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" />
+              )}
               <button 
                 onClick={() => setZoomedImage(null)}
                 className="absolute -top-12 right-0 text-white hover:text-gray-300 transition"

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Music, Menu, X, Heart } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Menu, X, Heart, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navLinks = [
@@ -18,11 +18,37 @@ const navLinks = [
   { name: '🎁 Surprise', href: '#surprise' },
 ];
 
+const playlist = [
+  {
+    title: 'Acoustic Breeze',
+    src: '/sounds/acoustic-breeze.mp3',
+  },
+  {
+    title: 'Just Relax',
+    src: '/sounds/just-relax.mp3',
+  },
+  {
+    title: 'Lofi Study',
+    src: '/sounds/lofi-study.mp3',
+  },
+  {
+    title: 'Track 4',
+    src: '/sounds/track-4.mp3', // ⚠️ Ganti dengan nama file ke-4 Anda di public/sounds
+  },
+  {
+    title: 'Track 5',
+    src: '/sounds/track-5.mp3', // ⚠️ Ganti dengan nama file ke-5 Anda di public/sounds
+  },
+];
+
 export default function Header() {
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted due to autoplay policies
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('');
+  // Pindahkan state ke atas agar bisa diakses oleh playNext
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const consecutiveErrorCountRef = useRef(0); // To prevent infinite loops
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -33,29 +59,83 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const playNext = useCallback(() => {
+    setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % playlist.length);
+  }, []);
+
+  // 1. Initialize audio element and set up event listeners (once on mount)
   useEffect(() => {
-    // Inisialisasi Audio (Pastikan file 'music.mp3' ada di folder public)
-    audioRef.current = new Audio('/music.mp3');
-    audioRef.current.loop = true;
+    audioRef.current = new Audio();
+    audioRef.current.loop = false; // Playlist handles looping
     audioRef.current.volume = 0.5;
+    audioRef.current.muted = true; // Start muted, will be unmuted by user interaction or if autoplay succeeds
+    audioRef.current.onended = playNext;
+
+    // This event fires when a track has loaded enough to be played.
+    // This is a good place to reset our error counter.
+    audioRef.current.oncanplay = () => {
+      consecutiveErrorCountRef.current = 0;
+    };
+
+    // This event fires when the browser can't load the audio file.
+    audioRef.current.onerror = () => {
+      if (!audioRef.current) return;
+
+      console.warn(
+        `Audio playback error on track: ${audioRef.current.src}. Skipping to next track.`
+      );
+      
+      consecutiveErrorCountRef.current += 1;
+      
+      // If we've failed to load more tracks than exist in the playlist, stop trying.
+      if (consecutiveErrorCountRef.current >= playlist.length) {
+        console.error("All tracks in the playlist failed to load. Stopping playback.");
+        audioRef.current.pause();
+        setIsMuted(true); // Visually indicate that it's stopped
+        return;
+      }
+      
+      // Skip to the next track after a short delay
+      setTimeout(playNext, 200);
+    };
 
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
+        audioRef.current.oncanplay = null;
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [playNext]);
 
+  // 2. Update track source and play when currentTrackIndex changes
   useEffect(() => {
     if (audioRef.current) {
-      if (isMusicPlaying) {
-        audioRef.current.play().catch(() => setIsMusicPlaying(false));
-      } else {
-        audioRef.current.pause();
+      audioRef.current.src = playlist[currentTrackIndex].src;
+      // Always try to play. The `onerror` handler will catch loading failures.
+      audioRef.current.play().catch(error => {
+        // This catch is for play() promise rejections (e.g., browser policy).
+        if (error.name !== 'AbortError') { // AbortError is common and can be ignored.
+            console.warn(`Audio play() was prevented for ${playlist[currentTrackIndex].src}:`, error.message);
+        }
+      });
+    }
+  }, [currentTrackIndex]);
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      const newMuted = !isMuted;
+      setIsMuted(newMuted);
+      audioRef.current.muted = newMuted;
+      if (!newMuted) {
+        audioRef.current.play().catch((e) => {
+          console.warn("Audio play failed on unmute:", e);
+        });
       }
     }
-  }, [isMusicPlaying]);
+  };
 
   // Active Section Observer
   useEffect(() => {
@@ -119,11 +199,11 @@ export default function Header() {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setIsMusicPlaying(!isMusicPlaying)}
-              className={`p-2.5 rounded-full transition shadow-sm border ${isMusicPlaying ? 'bg-cyan-100 border-cyan-300 text-cyan-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-              title="Toggle Music"
+              onClick={toggleMute}
+              className={`p-2.5 rounded-full transition shadow-sm border ${!isMuted ? 'bg-cyan-100 border-cyan-300 text-cyan-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+              title={!isMuted ? "Mute Music" : "Unmute Music"}
             >
-              <Music size={20} />
+              {!isMuted ? <Volume2 size={20} /> : <VolumeX size={20} />}
             </motion.button>
 
             {/* Menu Toggle */}

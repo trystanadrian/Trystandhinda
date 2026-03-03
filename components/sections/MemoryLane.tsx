@@ -7,27 +7,57 @@ import { Shuffle, Layers, RotateCcw, X } from 'lucide-react';
 const memories = [
   {
     id: 1,
-    src: 'https://www.stickpng.com/assets/images/580b585b2edb169958a529b8.png', // Flower
+    src: '/images/MemoryLane/a.png',
     caption: '',
     rotate: -5,
   },
   {
     id: 2,
-    src: 'https://www.stickpng.com/assets/images/580b585b2edb169958a529b1.png', // Heart
+    src: '/images/MemoryLane/b.png',
     caption: '',
     rotate: 3,
   },
   {
     id: 3,
-    src: 'https://www.stickpng.com/assets/images/580b585b2edb169958a529d4.png', // Star
+    src: '/images/MemoryLane/c.png',
     caption: '',
     rotate: -2,
   },
   {
     id: 4,
-    src: 'https://www.stickpng.com/assets/images/580b585b2edb169958a5281d.png', // Butterfly
+    src: '/images/MemoryLane/d.png',
     caption: '',
     rotate: 4,
+  },
+  {
+    id: 5,
+    src: '/images/MemoryLane/e.png',
+    caption: '',
+    rotate: -3,
+  },
+  {
+    id: 6,
+    src: '/images/MemoryLane/f.png',
+    caption: '',
+    rotate: 2,
+  },
+  {
+    id: 7,
+    src: '/images/MemoryLane/g.png',
+    caption: '',
+    rotate: -4,
+  },
+  {
+    id: 8,
+    src: '/images/MemoryLane/h.png',
+    caption: '',
+    rotate: 5,
+  },
+  {
+    id: 9,
+    src: '/images/MemoryLane/i.png',
+    caption: '',
+    rotate: -1,
   },
 ];
 
@@ -117,11 +147,10 @@ export default function MemoryLane() {
               onDragStart={() => bringToFront(memory.id)}
               onDoubleClick={() => setSelectedId(memory.id)}
               onDragEnd={(e, info) => handleDragEnd(memory.id, info.offset)}
-              animate={{ x: memory.x, y: memory.y, rotate: memory.rotate, zIndex: memory.zIndex }}
+              animate={{ x: memory.x, y: memory.y, rotate: memory.rotate, zIndex: memory.zIndex, opacity: 1, scale: 1 }}
               whileHover={{ scale: 1.1, cursor: 'grab' }}
               whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
               initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               className="absolute w-48 h-48 md:w-64 md:h-64 transform"
             >
