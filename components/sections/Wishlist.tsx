@@ -21,8 +21,20 @@ const categoryInfo = {
 };
 
 export default function Wishlist() {
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [items, setItems] = useState<WishlistItem[]>(() => {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+    try {
+      const savedItems = localStorage.getItem('wishlist_items');
+      // Jika ada data tersimpan, gunakan itu. Jika tidak, mulai dengan array kosong.
+      return savedItems ? JSON.parse(savedItems) : [];
+    } catch (error) {
+      console.error('Gagal memuat wishlist dari localStorage', error);
+      return [];
+    }
+  });
+
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isReorderMode, setIsReorderMode] = useState(false);
@@ -42,25 +54,14 @@ export default function Wishlist() {
     return { total, completed, percentage };
   }, [items]);
 
-  // Load from local storage
-  useEffect(() => {
-    const saved = localStorage.getItem('wishlist_items');
-    if (saved) {
-      try {
-        setItems(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse wishlist items', e);
-      }
-    }
-    setIsLoaded(true);
-  }, []);
-
   // Save to local storage
   useEffect(() => {
-    if (isLoaded) {
+    try {
       localStorage.setItem('wishlist_items', JSON.stringify(items));
+    } catch (error) {
+      console.error('Gagal menyimpan wishlist ke localStorage', error);
     }
-  }, [items, isLoaded]);
+  }, [items]);
 
   useEffect(() => {
     if (stats.completed === stats.total && stats.total > 0) {

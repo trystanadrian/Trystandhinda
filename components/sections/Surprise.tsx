@@ -78,10 +78,10 @@ export default function Surprise() {
                   Kamu berani klik tombol yang aku bilang jangan diklik? 😏
                   <br />
                   <br />
-                  Berarti kamu penasaran... atau mungkin kamu suka petualangan? 😄
+                  Berarti kamu penasaran... mungkinn yeeuu? 😄
                   <br />
                   <br />
-                  Apapun alasannya, aku siap kasih hadiah special untuk kamu.
+                  Apapun alasannya, aku mau kasih hadiah spesial buat kamu.
                 </p>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -97,7 +97,7 @@ export default function Surprise() {
                 variants={itemVariants}
                 className="text-sm text-gray-600 italic"
               >
-                (Ini adalah video spesial yang aku buat untuk kamu 💕)
+                (P.S You're the Only Exception 💕)
               </motion.p>
             </motion.div>
           )}
