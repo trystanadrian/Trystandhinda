@@ -117,11 +117,10 @@ export default function MemoryLane() {
               onDragStart={() => bringToFront(memory.id)}
               onDoubleClick={() => setSelectedId(memory.id)}
               onDragEnd={(e, info) => handleDragEnd(memory.id, info.offset)}
-              animate={{ x: memory.x, y: memory.y, rotate: memory.rotate, zIndex: memory.zIndex }}
+              animate={{ x: memory.x, y: memory.y, rotate: memory.rotate, zIndex: memory.zIndex, opacity: 1, scale: 1 }}
               whileHover={{ scale: 1.1, cursor: 'grab' }}
               whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
               initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               className="absolute w-48 h-48 md:w-64 md:h-64 transform"
             >
