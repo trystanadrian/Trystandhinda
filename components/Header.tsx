@@ -20,24 +20,24 @@ const navLinks = [
 
 const playlist = [
   {
-    title: 'Acoustic Breeze',
-    src: '/sounds/acoustic-breeze.mp3',
+    title: 'Sweet February',
+    src: '/sounds/sweet february.mp3',
   },
   {
-    title: 'Just Relax',
-    src: '/sounds/just-relax.mp3',
+    title: 'Soft Hearts',
+    src: '/sounds/soft hearts.mp3',
   },
   {
-    title: 'Lofi Study',
-    src: '/sounds/lofi-study.mp3',
+    title: 'Soft February',
+    src: '/sounds/soft february.mp3',
   },
   {
-    title: 'Track 4',
-    src: '/sounds/track-4.mp3', // ⚠️ Ganti dengan nama file ke-4 Anda di public/sounds
+    title: 'Love in Bloom',
+    src: '/sounds/love in bloom.mp3',
   },
   {
-    title: 'Track 5',
-    src: '/sounds/track-5.mp3', // ⚠️ Ganti dengan nama file ke-5 Anda di public/sounds
+    title: 'February Love',
+    src: '/sounds/february love.mp3',
   },
 ];
 
@@ -89,7 +89,7 @@ export default function Header() {
       
       // If we've failed to load more tracks than exist in the playlist, stop trying.
       if (consecutiveErrorCountRef.current >= playlist.length) {
-        console.error("All tracks in the playlist failed to load. Stopping playback.");
+        console.error("All tracks in the playlist failed to load. Please check if files exist in public/sounds/.");
         audioRef.current.pause();
         setIsMuted(true); // Visually indicate that it's stopped
         return;

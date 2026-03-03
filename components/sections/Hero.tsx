@@ -175,7 +175,7 @@ export default function Hero() {
         {/* Subtitle */}
         <motion.div variants={itemVariants} className="mb-10">
           <span className="inline-block py-2 px-6 rounded-full bg-white/30 backdrop-blur-sm border border-white/50 text-lg md:text-xl text-teal-800 font-light tracking-[0.2em] uppercase">
-            <TypewriterText text="✨ Our Digital Time Capsule ✨" />
+            <TypewriterText text="Our Digital Time Capsule" />
           </span>
         </motion.div>
 

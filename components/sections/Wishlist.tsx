@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { Plus, X, Trash2, CheckCircle2, Circle, Upload, Image as ImageIcon, ArrowUpDown, GripVertical, Search } from 'lucide-react';
-import { useEffect } from 'react';
 
 interface WishlistItem {
   id: number;
@@ -21,43 +20,9 @@ const categoryInfo = {
   small: { label: '💕 Hal Kecil', color: 'from-green-400 to-emerald-400' },
 };
 
-const mockWishlist: WishlistItem[] = [
-  {
-    id: 1,
-    title: 'Pergi ke Bali',
-    category: 'place',
-    completed: false,
-    description: 'Liburan romantis di pantai',
-    image: '',
-  },
-  {
-    id: 2,
-    title: 'Bikin Project Bersama',
-    category: 'random',
-    completed: false,
-    description: 'Sesuatu yang meaningful untuk kita berdua',
-    image: '',
-  },
-  {
-    id: 3,
-    title: 'Tinggal Satu Kota',
-    category: 'together',
-    completed: false,
-    description: 'Target jangka panjang ❤️',
-    image: '',
-  },
-  {
-    id: 4,
-    title: 'Nonton Film Bareng',
-    category: 'small',
-    completed: true,
-    description: 'Udah kesampaian! 🎬',
-    image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=300&fit=crop',
-  },
-];
-
 export default function Wishlist() {
-  const [items, setItems] = useState<WishlistItem[]>(mockWishlist);
+  const [items, setItems] = useState<WishlistItem[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isReorderMode, setIsReorderMode] = useState(false);
@@ -73,9 +38,29 @@ export default function Wishlist() {
   const stats = useMemo(() => {
     const total = items.length;
     const completed = items.filter((i) => i.completed).length;
-    const percentage = Math.round((completed / total) * 100);
+    const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
     return { total, completed, percentage };
   }, [items]);
+
+  // Load from local storage
+  useEffect(() => {
+    const saved = localStorage.getItem('wishlist_items');
+    if (saved) {
+      try {
+        setItems(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse wishlist items', e);
+      }
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Save to local storage
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('wishlist_items', JSON.stringify(items));
+    }
+  }, [items, isLoaded]);
 
   useEffect(() => {
     if (stats.completed === stats.total && stats.total > 0) {

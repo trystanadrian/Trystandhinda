@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shuffle, Layers, RotateCcw, X } from 'lucide-react';
 
@@ -64,13 +64,32 @@ const memories = [
 export default function MemoryLane() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [items, setItems] = useState(memories.map((m, i) => ({
-    ...m,
-    x: (i - 1.5) * 40,
-    y: i * 10,
-    rotate: m.rotate,
-    zIndex: i + 1
-  })));
+
+  const getInitialState = () => memories.map((m, i) => ({
+      ...m,
+      x: (i - 1.5) * 40,
+      y: i * 10,
+      rotate: m.rotate,
+      zIndex: i + 1
+    }));
+
+  const [items, setItems] = useState(() => {
+    if (typeof window === 'undefined') {
+      return getInitialState();
+    }
+    try {
+      const savedItems = localStorage.getItem('memoryLaneItems');
+      if (savedItems) {
+        const parsed = JSON.parse(savedItems);
+        if (Array.isArray(parsed) && parsed.length === memories.length) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.error("Error loading from localStorage for MemoryLane:", error);
+    }
+    return getInitialState();
+  });
 
   const bringToFront = (id: number) => {
     setItems(prev => {
@@ -78,6 +97,11 @@ export default function MemoryLane() {
       return prev.map(item => item.id === id ? { ...item, zIndex: maxZ + 1 } : item);
     });
   };
+
+  // Save state to localStorage whenever items change
+  useEffect(() => {
+    localStorage.setItem('memoryLaneItems', JSON.stringify(items));
+  }, [items]);
 
   const handleDragEnd = (id: number, offset: { x: number; y: number }) => {
     setItems(prev => prev.map(item => 
@@ -112,13 +136,7 @@ export default function MemoryLane() {
   };
 
   const handleReset = () => {
-     setItems(memories.map((m, i) => ({
-      ...m,
-      x: (i - 1.5) * 40,
-      y: i * 10,
-      rotate: m.rotate,
-      zIndex: i + 1
-    })));
+     setItems(getInitialState());
   };
 
   return (
