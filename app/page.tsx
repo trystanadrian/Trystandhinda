@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, PanInfo, AnimatePresence } from 'framer-motion';
-import { Mail, Heart, Gift, Sparkles, X } from 'lucide-react';
+import { motion, PanInfo, AnimatePresence, useAnimation } from 'framer-motion';
+import { Mail, Heart, Gift, Sparkles, X, Lock } from 'lucide-react';
 
 import Header from '@/components/Header';
 import StarBackground from '@/components/StarBackground';
@@ -35,6 +35,23 @@ const sections = [
   { id: 'loveletter', icon: '💌', component: <LoveLetter />, title: 'Love Letter', gradient: 'linear-gradient(to bottom right, #fff1f2, #ffe4e6, #fda4af)' },
   { id: 'surprise', icon: '🎁', component: <Surprise />, title: 'Surprise', gradient: 'linear-gradient(to bottom right, #fff7ed, #ffedd5, #fed7aa)' },
 ];
+
+// Set to true to unlock all sections
+const ALL_SECTIONS_UNLOCKED = false;
+const lockedByDefault = ['timeline', 'gallery', 'messages', 'loveletter'];
+
+function LockedContent({ sectionId }: { sectionId: string }) {
+  return (
+      <div className="flex flex-col items-center justify-center h-[400px] text-center p-8">
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}>
+              <Lock size={64} className="text-teal-300 mb-6" />
+          </motion.div>
+          <h3 className="text-3xl font-playfair font-bold text-teal-800 mb-2">Coming Soon</h3>
+          <p className="text-teal-600">Fitur ini sedang dalam pengembangan dan akan segera hadir!</p>
+      </div>
+  );
+}
+
 
 function BirthdayOverlay({ onComplete }: { onComplete: () => void }) {
   const [stage, setStage] = useState<'mailbox' | 'envelope' | 'letter'>('mailbox');
@@ -221,9 +238,14 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [radius, setRadius] = useState(450);
   const [isPaused, setIsPaused] = useState(false);
+  const carouselControls = useAnimation();
 
   // Konfigurasi 3D Carousel
   const theta = 360 / sections.length; // Sudut antar item
+
+  const unlockedSections = ALL_SECTIONS_UNLOCKED
+    ? sections.map(s => s.id)
+    : sections.map(s => s.id).filter(id => !lockedByDefault.includes(id));
 
   // Helper untuk mendapatkan index yang valid (0 - length-1) dari activeIndex yang bisa minus/lebih besar
   const getNormalizedIndex = (index: number) => ((index % sections.length) + sections.length) % sections.length;
@@ -285,6 +307,11 @@ export default function Home() {
     }
   }, [activeIndex, isLoaded]);
 
+  // Sync rotation animation with activeIndex
+  useEffect(() => {
+    carouselControls.start({ rotateY: activeIndex * -theta });
+  }, [activeIndex, carouselControls, theta]);
+
   // Auto-rotate effect
   useEffect(() => {
     if (showBirthday || isDragging || isPaused) return;
@@ -323,10 +350,6 @@ export default function Home() {
         animate={{ background: sections[getNormalizedIndex(activeIndex)].gradient }}
         transition={{ duration: 1.5, ease: "easeInOut" }}
       >
-        <AnimatePresence>
-          {showBirthday && <BirthdayOverlay onComplete={() => setShowBirthday(false)} />}
-        </AnimatePresence>
-
         <StarBackground />
         <Header />
 
@@ -345,7 +368,7 @@ export default function Home() {
             {/* Rotating Container (Cylinder) */}
             <motion.div
               className="relative w-full h-full preserve-3d"
-              animate={{ rotateY: activeIndex * -theta }}
+              animate={carouselControls}
               transition={{ type: "spring", stiffness: 40, damping: 15, mass: 1 }}
               drag="x"
               dragElastic={0.2}
@@ -364,6 +387,7 @@ export default function Home() {
               {sections.map((section, index) => {
                 const angle = index * theta;
                 const isActive = getNormalizedIndex(activeIndex) === index;
+                const isLocked = !unlockedSections.includes(section.id);
                 
                 return (
                   <motion.div
@@ -377,6 +401,10 @@ export default function Home() {
                       WebkitBackfaceVisibility: 'hidden',
                     }}
                     onClick={() => {
+                      if (isLocked && !isActive) {
+                        carouselControls.start({ rotateY: (activeIndex * -theta) + (Math.random() > 0.5 ? 2 : -2), transition: { type: 'spring', stiffness: 500, damping: 5 } })
+                          .then(() => carouselControls.start({ rotateY: activeIndex * -theta }));
+                      }
                       // Calculate shortest path to clicked item
                       const currentNormalized = getNormalizedIndex(activeIndex);
                       let diff = index - currentNormalized;
@@ -390,13 +418,22 @@ export default function Home() {
                       className={`
                         relative w-full h-full aspect-square overflow-hidden rounded-3xl carousel-card
                         transition-all duration-500 ease-out flex flex-col items-center justify-center
-                        ${isActive 
-                          ? 'opacity-100 scale-110 shadow-[0_10px_30px_rgba(6,182,212,0.3)] z-20 bg-white/60 backdrop-blur-xl border-white/80 ring-4 ring-white/30' 
-                          : 'opacity-60 scale-75 grayscale-[60%] blur-[2px] z-10 bg-white/20 border-white/20 hover:opacity-90 hover:scale-90 hover:bg-white/30 hover:blur-none'}
+                        ${
+                          isActive 
+                            ? 'opacity-100 scale-110 shadow-[0_10px_30px_rgba(6,182,212,0.3)] z-20 bg-white/60 backdrop-blur-xl border-white/80 ring-4 ring-white/30' 
+                            : isLocked
+                              ? 'opacity-50 grayscale-[80%] blur-[2px] z-10 bg-white/20 border-white/20 cursor-not-allowed'
+                              : 'opacity-60 scale-75 grayscale-[60%] blur-[2px] z-10 bg-white/20 border-white/20 hover:opacity-90 hover:scale-90 hover:bg-white/30 hover:blur-none'
+                        }
                         border-[1px]
                       `}
                     >
                       {/* Animated Gradient Background for Active */}
+                      {isLocked && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20 rounded-3xl">
+                            <Lock size={isActive ? 40 : 32} className={isActive ? "text-white/70" : "text-white/50"} />
+                        </div>
+                      )}
                       {isActive && (
                         <>
                           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-cyan-100/50 to-rose-100/50 opacity-70" />
@@ -445,16 +482,20 @@ export default function Home() {
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-70" />
 
               <div className="p-4 md:p-10">
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="wait" initial={false}>
                   <motion.div
-                    key={sections[getNormalizedIndex(activeIndex)].id}
+                    key={getNormalizedIndex(activeIndex)}
                     initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
                     animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                     exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
                     className="w-full h-full"
                   >
-                    {sections[getNormalizedIndex(activeIndex)].component}
+                    {unlockedSections.includes(sections[getNormalizedIndex(activeIndex)].id) ? (
+                      sections[getNormalizedIndex(activeIndex)].component
+                    ) : (
+                      <LockedContent sectionId={sections[getNormalizedIndex(activeIndex)].id} />
+                    )}
                   </motion.div>
                 </AnimatePresence>
               </div>

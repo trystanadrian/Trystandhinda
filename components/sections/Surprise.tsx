@@ -111,57 +111,49 @@ export default function Surprise() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowVideo(false)}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-3xl"
+                className="relative w-full max-w-4xl bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
               >
-                {/* Close button */}
-                <button
-                  onClick={() => setShowVideo(false)}
-                  className="absolute -top-12 right-0 text-white hover:text-gray-300 transition z-50"
-                >
-                  <X size={32} />
-                </button>
-
-                {/* Video Container */}
-                <div className="aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
-                  {/* Placeholder for video */}
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 to-pink-900">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                      className="mb-4"
+                {/* Header */}
+                <div className="flex justify-between items-center p-4 border-b border-white/10 bg-white/5">
+                   <h3 className="text-white font-playfair text-lg md:text-xl font-bold flex items-center gap-2">
+                     🎁 Special Surprise
+                   </h3>
+                   <button
+                      onClick={() => setShowVideo(false)}
+                      className="text-white/70 hover:text-white transition hover:bg-white/10 p-2 rounded-full"
                     >
-                      <div className="text-6xl">🎬</div>
-                    </motion.div>
-                    <p className="text-white text-center">
-                      <span className="block text-2xl font-bold mb-2">🎥 Personal Video</span>
-                      <span className="block text-sm">Ganti URL ini dengan video link kamu</span>
-                    </p>
-
-                    {/* Embed Video Example (uncomment to use) */}
-                    {/* <iframe
-                      className="w-full h-full"
-                      src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                      frameBorder="0"
-                      allowFullScreen
-                    /> */}
-                  </div>
+                      <X size={24} />
+                    </button>
                 </div>
 
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="text-center text-white mt-6 text-sm"
-                >
-                  Ini adalah momen spesial untuk kamu. I love you so much ❤️
-                </motion.p>
+                {/* Video Container */}
+                <div className="aspect-video bg-black relative">
+                  <iframe
+                    className="w-full h-full"
+                    src="https://drive.google.com/file/d/1XFP1O5p-kZBXs1G5gL2FdKn5cAyRcRQf/preview"
+                    allow="autoplay"
+                    allowFullScreen
+                  />
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 text-center bg-gradient-to-b from-transparent to-black/20">
+                    <motion.p
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="text-white/90 font-medium text-lg"
+                    >
+                      "Ini adalah momen spesial untuk kamu. I love you so much ❤️"
+                    </motion.p>
+                </div>
               </motion.div>
             </motion.div>
           )}

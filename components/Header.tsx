@@ -195,6 +195,28 @@ export default function Header() {
           
           {/* Right Controls */}
           <div className="flex gap-3 md:gap-4 items-center">
+            {/* Song Title Indicator */}
+            <AnimatePresence mode="wait">
+              {!isMuted && (
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="hidden md:flex flex-col items-end mr-2"
+                >
+                  <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Now Playing</span>
+                  <motion.span
+                    key={currentTrackIndex}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-sm font-bold text-teal-800 max-w-[150px] truncate"
+                  >
+                    {playlist[currentTrackIndex].title}
+                  </motion.span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Music Toggle */}
             <motion.button
               whileHover={{ scale: 1.1 }}

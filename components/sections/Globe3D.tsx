@@ -267,6 +267,16 @@ export default function Globe3D() {
     });
   };
 
+  const handleCheckpointDragEnd = (id: number, e: any) => {
+    const marker = e.target;
+    const position = marker.getLatLng();
+    setCheckpoints(prev => {
+      return prev.map(point => 
+        point.id === id ? { ...point, lat: position.lat, lng: position.lng } : point
+      );
+    });
+  };
+
   const addToGoogleCalendar = () => {
     const title = encodeURIComponent("Ketemu Ayang ❤️");
     const details = encodeURIComponent("Saatnya bertemu dan melepas rindu! Jangan lupa bawa senyum manis.");
@@ -344,12 +354,14 @@ export default function Globe3D() {
               <Marker
                 key={point.id}
                 position={[point.lat, point.lng]}
+                draggable={true}
                 icon={checkpointIcon}
                 eventHandlers={{
                   click: () => {
                     setSelectedCheckpoint(point);
                     setFlyToPosition([point.lat, point.lng]);
                   },
+                  dragend: (e) => handleCheckpointDragEnd(point.id, e),
                 }}
               >
                 <Popup>
