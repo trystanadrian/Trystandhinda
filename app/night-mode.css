@@ -1,0 +1,93 @@
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  transition: background-color 1s ease, color 1s ease;
+}
+
+/* Night Mode Overrides */
+body.night-mode {
+  background: linear-gradient(to bottom, #0f172a, #1e1b4b, #312e81) !important;
+  color: #e2e8f0 !important;
+}
+
+/* Override component backgrounds for dark mode readability */
+body.night-mode .bg-white\/50,
+body.night-mode .bg-white\/60,
+body.night-mode .bg-white\/70,
+body.night-mode .bg-white\/80,
+body.night-mode .bg-white {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+  border-color: #6366f1 !important;
+  color: #e2e8f0 !important;
+}
+
+body.night-mode .text-teal-700,
+body.night-mode .text-amber-950,
+body.night-mode .text-gray-700,
+body.night-mode .text-gray-600,
+body.night-mode .text-amber-900 {
+  color: #e2e8f0 !important;
+}
+
+body.night-mode .text-teal-600 {
+  color: #94a3b8 !important;
+}
+
+/* Stars Container */
+body.night-mode .night-mode-stars {
+  opacity: 1;
+}
+
+/* Static Stars using radial gradients */
+.stars-static {
+  background-image: 
+    radial-gradient(1px 1px at 25px 5px, white, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 50px 25px, white, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 125px 20px, white, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 50px 75px, white, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 15px 125px, white, rgba(0,0,0,0)),
+    radial-gradient(2.5px 2.5px at 110px 80px, white, rgba(0,0,0,0));
+  background-size: 200px 200px;
+  animation: twinkle 4s infinite;
+}
+
+@keyframes twinkle {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+/* Shooting Stars */
+[class^="shooting-star-"] {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.1), 0 0 0 8px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,1);
+  opacity: 0;
+}
+
+.shooting-star-1 {
+  animation: shooting 4s linear infinite;
+  animation-delay: 0s;
+}
+
+.shooting-star-2 {
+  animation: shooting 6s linear infinite;
+  animation-delay: 2s;
+}
+
+@keyframes shooting {
+  0% {
+    transform: translate(300px, -300px) rotate(45deg) scale(0);
+    opacity: 0;
+  }
+  10% { opacity: 1; }
+  20% { transform: translate(-300px, 300px) rotate(45deg) scale(1); opacity: 0; }
+  100% { transform: translate(-300px, 300px) rotate(45deg) scale(1); opacity: 0; }
+}

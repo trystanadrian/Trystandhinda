@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+:root {
+  --cream: #f0f9ff;
+  --warm-brown: #0f766e;
+  --soft-peach: #ccfbf1;
+  --dusty-rose: #d4f8f6;
+  --warm-tan: #a7f3d0;
+  --heart-red: #06b6d4;
+  --teal-light: #e0f2fe;
+  --cyan-light: #cffafe;
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-warm-brown: var(--warm-brown);
+  /* Menghubungkan variabel font dari layout.tsx ke Tailwind */
+  --font-poppins: var(--font-poppins);
+  --font-playfair: var(--font-playfair);
+}
+
+/* 1. Global Reset & Fix Dempet */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Mencegah teks terlalu rapat di semua device */
+  -webkit-text-size-adjust: 100%;
+  background: transparent;
+}
+
+body {
+  /* Style dasar ditangani oleh Tailwind di layout.tsx untuk menghindari konflik */
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.6; /* Memberi ruang antar baris */
+  min-height: 100vh;
+  overflow-x: hidden; /* Mencegah horizontal scroll */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 2. Form Element Fix */
+input, button, textarea, select {
+  font-family: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* 3. Helper Classes */
+.font-playfair {
+  font-family: var(--font-playfair), serif;
+}
+
+/* 3a. Force white backgrounds to transparent so the base gradient shows through */
+[class*="bg-white"] {
+  background-color: transparent !important;
+}
+
+/* 4. Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 5px rgba(15, 118, 110, 0.3); }
+  50% { text-shadow: 0 0 20px rgba(15, 118, 110, 0.6); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; }
+.animate-fadeInDown { animation: fadeInDown 0.6s ease-out forwards; }
+.animate-glow { animation: glow 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-twinkle { animation: twinkle 3s ease-in-out infinite; }
+
+/* 5. Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 118, 110, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--warm-brown);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0d5a54;
+}
+
+/* 6. Night Mode */
+body.night-mode {
+  background: linear-gradient(135deg, #082f49 0%, #0c4a6e 25%, #0e7490 50%, #155e75 75%, #082f49 100%);
+  background-attachment: fixed;
+  color: #e0f2fe;
+}
+
+/* Spacing default antar section */
+section {
+  padding: 2rem;
+}
+
+/* Biar button tidak nempel */
+button {
+  padding: 0.5rem 1rem;
+}
+
+/* Card umum */
+.card {
+  padding: 1.25rem;
+  border-radius: 1rem;
+}
+
+/* 3D Carousel Utilities */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* carousel card styling for 3d rotation */
+.carousel-card {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* 3D Carousel Utilities */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
