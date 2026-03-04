@@ -46,7 +46,7 @@ export default function Wishlist() {
   // Load from Supabase
   useEffect(() => {
     const fetchItems = async () => {
-      const { data } = await supabase.from('wishlist').select('*');
+      const { data } = await supabase.from('wishlists').select('*');
       if (data) setItems(data);
     };
     fetchItems();
@@ -68,7 +68,7 @@ export default function Wishlist() {
         image: '',
       };
 
-      const { data, error } = await supabase.from('wishlist').insert([itemToAdd]).select();
+      const { data, error } = await supabase.from('wishlists').insert([itemToAdd]).select();
       
       if (data) {
         setItems([...items, ...data]);
@@ -81,13 +81,13 @@ export default function Wishlist() {
   const handleToggleItem = async (id: number | string) => {
     const item = items.find(i => i.id === id);
     if (item) {
-      const { error } = await supabase.from('wishlist').update({ completed: !item.completed }).eq('id', id);
+      const { error } = await supabase.from('wishlists').update({ completed: !item.completed }).eq('id', id);
       if (!error) setItems(items.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item)));
     }
   };
 
   const handleDeleteItem = async (id: number | string) => {
-    const { error } = await supabase.from('wishlist').delete().eq('id', id);
+    const { error } = await supabase.from('wishlists').delete().eq('id', id);
     if (!error) setItems(items.filter((item) => item.id !== id));
   };
 
@@ -95,7 +95,7 @@ export default function Wishlist() {
     const file = e.target.files?.[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      const { error } = await supabase.from('wishlist').update({ image: imageUrl }).eq('id', id);
+      const { error } = await supabase.from('wishlists').update({ image: imageUrl }).eq('id', id);
       if (!error) setItems(items.map((item) => (item.id === id ? { ...item, image: imageUrl } : item)));
     }
   };
