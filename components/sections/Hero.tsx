@@ -167,7 +167,7 @@ export default function Hero() {
         {/* Main title */}
         <motion.h1
           variants={itemVariants}
-          className="text-7xl md:text-9xl font-playfair font-bold bg-gradient-to-r from-teal-600 via-cyan-500 to-blue-600 bg-clip-text text-transparent mb-6 drop-shadow-sm tracking-tight"
+          className="text-5xl md:text-7xl lg:text-9xl font-playfair font-bold bg-gradient-to-r from-teal-600 via-cyan-500 to-blue-600 bg-clip-text text-transparent mb-6 drop-shadow-sm tracking-tight"
         >
           trystandhinda
         </motion.h1>
@@ -186,7 +186,7 @@ export default function Hero() {
           className="inline-block mb-12 shadow-xl rounded-full"
         >
           <div className="px-8 py-5 rounded-full bg-white/90 backdrop-blur-xl">
-            <p className="text-2xl md:text-4xl font-playfair font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+            <p className="text-xl md:text-4xl font-playfair font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
               "No Distance Can Downgrade Us"
             </p>
           </div>

@@ -156,7 +156,7 @@ export default function MemoryLane() {
             </button>
         </div>
 
-        <div ref={containerRef} className="relative h-[600px] w-full bg-white/30 backdrop-blur-sm rounded-3xl border-2 border-white/50 shadow-inner flex items-center justify-center">
+        <div ref={containerRef} className="relative h-[400px] md:h-[600px] w-full bg-white/30 backdrop-blur-sm rounded-3xl border-2 border-white/50 shadow-inner flex items-center justify-center overflow-hidden">
           {items.map((memory) => (
             <motion.div
               key={memory.id}
@@ -170,7 +170,7 @@ export default function MemoryLane() {
               whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
               initial={{ opacity: 0, scale: 0.8 }}
               viewport={{ once: true }}
-              className="absolute w-48 h-48 md:w-64 md:h-64 transform"
+              className="absolute w-32 h-32 md:w-64 md:h-64 transform"
             >
               <img
                 src={memory.src}

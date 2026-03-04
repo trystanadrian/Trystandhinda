@@ -99,7 +99,7 @@ export default function LoveLetterGenerator() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold text-amber-950 mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold text-amber-950 mb-4">
             💌 Today's Love Letter
           </h2>
           <p className="text-lg text-gray-700 leading-relaxed">Generate a new message every day (or refresh for testing)</p>

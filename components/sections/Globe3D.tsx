@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { supabase } from '@/lib/supabase';
 
 interface LocationData {
   id: number;
@@ -17,7 +18,7 @@ interface LocationData {
 }
 
 interface Checkpoint {
-  id: number;
+  id: number | string;
   lat: number;
   lng: number;
   caption: string;
@@ -95,7 +96,7 @@ export default function Globe3D() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | string | null>(null);
   const [editForm, setEditForm] = useState({ caption: '', date: '' });
 
   // LDR Tracker State
@@ -117,22 +118,22 @@ export default function Globe3D() {
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
     });
 
-    const savedCheckpoints = localStorage.getItem('map_checkpoints');
-    if (savedCheckpoints) {
-      setCheckpoints(JSON.parse(savedCheckpoints));
-    }
+    const fetchCheckpoints = async () => {
+      const { data, error } = await supabase
+        .from('location_checkins')
+        .select('*');
+      
+      if (data) {
+        setCheckpoints(data);
+      }
+    };
+    fetchCheckpoints();
 
     const savedLocations = localStorage.getItem('map_locations');
     if (savedLocations) {
       setLocations(JSON.parse(savedLocations));
     }
   }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem('map_checkpoints', JSON.stringify(checkpoints));
-    }
-  }, [checkpoints, mounted]);
 
   // Request Notification Permission
   useEffect(() => {
@@ -198,30 +199,41 @@ export default function Globe3D() {
     }
   };
 
-  const handleSaveCheckpoint = () => {
+  const handleSaveCheckpoint = async () => {
     if (tempMarker && newCheckpointData.image) {
       const dateObj = newCheckpointData.date ? new Date(newCheckpointData.date) : new Date();
       const formattedDate = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
       const isoDate = newCheckpointData.date || dateObj.toISOString().split('T')[0];
 
-      const newPoint: Checkpoint = {
-        id: Date.now(),
+      const newPoint = {
         lat: tempMarker.lat,
         lng: tempMarker.lng,
         caption: newCheckpointData.caption,
         image: newCheckpointData.image,
         date: formattedDate,
         isoDate: isoDate
-      };
-      setCheckpoints([...checkpoints, newPoint]);
-      setTempMarker(null);
-      setNewCheckpointData({ caption: '', image: '', date: '' });
-      setIsAddingMarker(false);
+      }; 
+
+      const { data, error } = await supabase
+        .from('location_checkins')
+        .insert([newPoint])
+        .select();
+
+      if (data) {
+        setCheckpoints([...checkpoints, ...data]);
+        setTempMarker(null);
+        setNewCheckpointData({ caption: '', image: '', date: '' });
+        setIsAddingMarker(false);
+      }
     }
   };
 
-  const handleDeleteCheckpoint = (id: number) => {
-    setCheckpoints(checkpoints.filter(c => c.id !== id));
+  const handleDeleteCheckpoint = async (id: number | string) => {
+    const { error } = await supabase
+      .from('location_checkins')
+      .delete()
+      .eq('id', id);
+    if (!error) setCheckpoints(checkpoints.filter(c => c.id !== id));
     setSelectedCheckpoint(null);
     setEditingId(null);
   };
@@ -234,17 +246,24 @@ export default function Globe3D() {
     });
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingId === null) return;
     const dateObj = new Date(editForm.date);
     const formattedDate = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     
-    setCheckpoints(prev => prev.map(p => p.id === editingId ? {
-      ...p,
-      caption: editForm.caption,
-      date: formattedDate,
-      isoDate: editForm.date
-    } : p));
+    const { error } = await supabase
+      .from('location_checkins')
+      .update({ caption: editForm.caption, date: formattedDate, isoDate: editForm.date })
+      .eq('id', editingId);
+
+    if (!error) {
+      setCheckpoints(prev => prev.map(p => p.id === editingId ? {
+        ...p,
+        caption: editForm.caption,
+        date: formattedDate,
+        isoDate: editForm.date
+      } : p));
+    }
     setEditingId(null);
   };
 
@@ -267,7 +286,7 @@ export default function Globe3D() {
     });
   };
 
-  const handleCheckpointDragEnd = (id: number, e: any) => {
+  const handleCheckpointDragEnd = (id: number | string, e: any) => {
     const marker = e.target;
     const position = marker.getLatLng();
     setCheckpoints(prev => {
@@ -305,7 +324,7 @@ export default function Globe3D() {
       )}
 
       {/* Map Visualization */}
-      <div className={`relative w-full ${fullscreen ? 'h-full' : 'aspect-square min-h-[400px]'} rounded-xl overflow-hidden z-0`}>
+      <div className={`relative w-full ${fullscreen ? 'h-full' : 'aspect-square md:aspect-video min-h-[300px] md:min-h-[400px]'} rounded-xl overflow-hidden z-0`}>
         {mounted ? (
           <MapContainer
             center={[-7.0, 109.0]}
@@ -612,7 +631,7 @@ export default function Globe3D() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold text-amber-950 mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold text-amber-950 mb-4">
             📍 LDR Tracker & Map
           </h2>
           <p className="text-lg text-gray-700 leading-relaxed">Jarak yang memisahkan tapi tidak memandulkan</p>

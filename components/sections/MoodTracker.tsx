@@ -172,7 +172,7 @@ export default function MoodTracker() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold text-purple-800 mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold text-purple-800 mb-4">
             📅 Daily Mood Check-in
           </h2>
           <p className="text-lg text-purple-600">Bagaimana perasaanmu hari ini?</p>

@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, Play, Pause, Trash2, Upload, User, UserCheck } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface VoiceNote {
-  id: number;
+  id: number | string;
   duration: string;
   timestamp: string;
   url: string; // For future Supabase integration
@@ -18,29 +19,20 @@ export default function VoiceNotesRecorder() {
   const audioChunksRef = useRef<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([
-    {
-      id: 1,
-      duration: '0:45',
-      timestamp: '09:30',
-      url: '', 
-      sender: 'partner',
-      name: 'Morning Voice ☀️'
-    },
-    {
-      id: 2,
-      duration: '0:12',
-      timestamp: '09:32',
-      url: '', 
-      sender: 'me',
-      name: 'Morning too sayang!'
-    }
-  ]);
-  const [playingId, setPlayingId] = useState<number | null>(null);
+  const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
+  const [playingId, setPlayingId] = useState<number | string | null>(null);
   const [uploadSender, setUploadSender] = useState<'me' | 'partner'>('me');
   const [customName, setCustomName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      const { data } = await supabase.from('voice_notes').select('*');
+      if (data) setVoiceNotes(data);
+    };
+    fetchNotes();
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -66,8 +58,7 @@ export default function VoiceNotesRecorder() {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
 
-        const newNote: VoiceNote = {
-          id: Date.now(),
+        const newNote = {
           duration: `${Math.floor(recordingTime / 60)}:${(recordingTime % 60).toString().padStart(2, '0')}`,
           timestamp: new Date().toLocaleString('id-ID'),
           url,
@@ -75,8 +66,12 @@ export default function VoiceNotesRecorder() {
           name: `Voice Note #${voiceNotes.length + 1}`,
         };
 
-        setVoiceNotes((prev) => [...prev, newNote]);
-        setRecordingTime(0);
+        supabase.from('voice_notes').insert([newNote]).select().then(({ data }) => {
+          if (data) {
+            setVoiceNotes((prev) => [...prev, ...data]);
+            setRecordingTime(0);
+          }
+        });
       };
 
       mediaRecorderRef.current.start();
@@ -108,8 +103,7 @@ export default function VoiceNotesRecorder() {
         const secs = Math.floor(duration % 60);
         const formattedDuration = `${mins}:${secs.toString().padStart(2, '0')}`;
         
-        const newNote: VoiceNote = {
-            id: Date.now(),
+        const newNote = {
             duration: formattedDuration,
             timestamp: new Date().toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' }),
             url,
@@ -117,13 +111,17 @@ export default function VoiceNotesRecorder() {
             name: customName || file.name
         };
         
-        setVoiceNotes(prev => [...prev, newNote]);
-        setCustomName('');
-        if (fileInputRef.current) fileInputRef.current.value = '';
+        supabase.from('voice_notes').insert([newNote]).select().then(({ data }) => {
+          if (data) {
+            setVoiceNotes(prev => [...prev, ...data]);
+            setCustomName('');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+          }
+        });
     };
   };
 
-  const togglePlay = (url: string, id: number) => {
+  const togglePlay = (url: string, id: number | string) => {
     if (!url) return;
     if (playingId === id) {
       audioRef.current?.pause();
@@ -135,8 +133,9 @@ export default function VoiceNotesRecorder() {
     }
   };
 
-  const deleteNote = (id: number) => {
-    setVoiceNotes(voiceNotes.filter((note) => note.id !== id));
+  const deleteNote = async (id: number | string) => {
+    const { error } = await supabase.from('voice_notes').delete().eq('id', id);
+    if (!error) setVoiceNotes(voiceNotes.filter((note) => note.id !== id));
     if (playingId === id) {
       setPlayingId(null);
       if (audioRef.current) {
@@ -161,7 +160,7 @@ export default function VoiceNotesRecorder() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold text-teal-700 mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold text-teal-700 mb-4">
             🎤 Voice Notes
           </h2>
           <p className="text-lg text-teal-600">Chat suara kita, tersimpan selamanya</p>

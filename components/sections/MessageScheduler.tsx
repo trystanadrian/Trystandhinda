@@ -3,35 +3,18 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Upload, Move, Check, ZoomIn, ZoomOut, Calendar, MessageCircle, Trash2, Maximize2, Search, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { useEffect } from 'react';
 
 interface ChatMemory {
-  id: number;
+  id: number | string;
   date: string;
   image: string;
   caption: string;
 }
 
 export default function MessageScheduler() {
-  const [memories, setMemories] = useState<ChatMemory[]>([
-    {
-      id: 1,
-      date: '15 Jan 2024',
-      image: 'https://images.unsplash.com/photo-1577563908411-5077b6dc7624?w=600&h=400&fit=crop',
-      caption: 'Chat pagi yang bikin senyum 😊',
-    },
-    {
-      id: 2,
-      date: '20 Feb 2024',
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop',
-      caption: 'Inget gak pas kita bahas ini? 😂',
-    },
-    {
-      id: 3,
-      date: '10 Mar 2024',
-      image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&h=400&fit=crop',
-      caption: 'Ucapan malam ter-sweet ❤️',
-    },
-  ]);
+  const [memories, setMemories] = useState<ChatMemory[]>([]);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMemory, setNewMemory] = useState({ date: '', image: '', caption: '' });
@@ -50,6 +33,14 @@ export default function MessageScheduler() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const fetchMemories = async () => {
+      const { data } = await supabase.from('scheduled_messages').select('*');
+      if (data) setMemories(data);
+    };
+    fetchMemories();
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,24 +106,27 @@ export default function MessageScheduler() {
     }
   };
 
-  const addMemory = () => {
+  const addMemory = async () => {
     if (newMemory.image) {
-      setMemories([
-        ...memories,
-        {
-          id: Date.now(),
-          date: newMemory.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-          image: newMemory.image,
-          caption: newMemory.caption,
-        },
-      ]);
-      setNewMemory({ date: '', image: '', caption: '' });
-      setShowAddForm(false);
+      const memory = {
+        date: newMemory.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+        image: newMemory.image,
+        caption: newMemory.caption,
+      };
+
+      const { data, error } = await supabase.from('scheduled_messages').insert([memory]).select();
+      
+      if (data) {
+        setMemories([...memories, ...data]);
+        setNewMemory({ date: '', image: '', caption: '' });
+        setShowAddForm(false);
+      }
     }
   };
 
-  const deleteMemory = (id: number) => {
-    setMemories(memories.filter((m) => m.id !== id));
+  const deleteMemory = async (id: number | string) => {
+    const { error } = await supabase.from('scheduled_messages').delete().eq('id', id);
+    if (!error) setMemories(memories.filter((m) => m.id !== id));
   };
 
   // Extract available years from memories
@@ -189,7 +183,7 @@ export default function MessageScheduler() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold text-teal-700 mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold text-teal-700 mb-4">
             💬 Chat Memories
           </h2>
           <p className="text-lg text-teal-600">Kumpulan screenshot chat lucu & manis kita</p>

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Heart, MessageCircle, Plus, X, ChevronLeft, ChevronRight, Send, Edit2, Trash2, Check, Save, Upload } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface Comment {
   id: number;
@@ -11,7 +12,7 @@ interface Comment {
 }
 
 interface TimelineEvent {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   date: string;
@@ -22,55 +23,7 @@ interface TimelineEvent {
   comments: Comment[];
 }
 
-const mockEvents: TimelineEvent[] = [
-  {
-    id: 1,
-    title: 'First Chat',
-    description: 'Awal dari semuanya... DM pertama yang mengubah hidup.',
-    date: '2024-01-15',
-    icon: '💬',
-    color: 'blue',
-    likes: 45,
-    images: ['https://images.unsplash.com/photo-1611605698323-b1e99cfd37ea?w=600&h=600&fit=crop'],
-    comments: [
-      { id: 1, text: 'So sweet! 😍', user: 'User' },
-      { id: 2, text: 'Kapan nih part 2?', user: 'User' }
-    ],
-  },
-  {
-    id: 2,
-    title: 'First Call',
-    description: 'Suara pertama kamu... jantung berdebar menunggu panggilan VChat.',
-    date: '2024-02-20',
-    icon: '☎️',
-    color: 'green',
-    likes: 82,
-    images: ['https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=600&fit=crop'],
-    comments: [],
-  },
-  {
-    id: 3,
-    title: 'First Meet',
-    description: 'Akhirnya bertemu offline! Momen yang paling ditunggu.',
-    date: '2024-06-10',
-    icon: '👫',
-    color: 'red',
-    likes: 156,
-    images: ['https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&h=600&fit=crop', 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&h=600&fit=crop'],
-    comments: [{ id: 3, text: 'Couple goals! 🔥', user: 'User' }],
-  },
-  {
-    id: 4,
-    title: '1st Anniversary',
-    description: 'Satu tahun bersama, masih banyak yang perlu dijalani.',
-    date: '2025-01-15',
-    icon: '🎉',
-    color: 'purple',
-    likes: 210,
-    images: ['https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&h=600&fit=crop'],
-    comments: [],
-  },
-];
+const mockEvents: TimelineEvent[] = [];
 
 const TimelineEventItem = ({
   event,
@@ -85,12 +38,12 @@ const TimelineEventItem = ({
 }: {
   event: TimelineEvent;
   index: number;
-  onDelete: (id: number) => void;
-  onLike: (id: number) => void;
-  onEditEvent: (id: number, updatedEvent: Partial<TimelineEvent>) => void;
-  onAddComment: (id: number, text: string) => void;
-  onDeleteComment: (eventId: number, commentId: number) => void;
-  onEditComment: (eventId: number, commentId: number, text: string) => void;
+  onDelete: (id: number | string) => void;
+  onLike: (id: number | string) => void;
+  onEditEvent: (id: number | string, updatedEvent: Partial<TimelineEvent>) => void;
+  onAddComment: (id: number | string, text: string) => void;
+  onDeleteComment: (eventId: number | string, commentId: number) => void;
+  onEditComment: (eventId: number | string, commentId: number, text: string) => void;
   getGradient: (color: string) => string;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -333,7 +286,7 @@ const TimelineEventItem = ({
       </div>
 
       {/* 3D Timeline Sphere (Center) */}
-      <div className="relative flex items-center justify-center w-40 md:w-[20%] z-20 flex-shrink-0">
+      <div className="relative flex items-center justify-center w-full md:w-[20%] z-20 flex-shrink-0 my-4 md:my-0">
         <motion.div
           style={{ scale, opacity }}
           drag
@@ -372,25 +325,15 @@ export default function Timeline() {
     color: 'amber',
   });
 
-  // Load from local storage
+  // Load from Supabase
   useEffect(() => {
-    const saved = localStorage.getItem('timeline_events');
-    if (saved) {
-      try {
-        setEvents(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load events", e);
-      }
-    }
+    const fetchEvents = async () => {
+      const { data } = await supabase.from('timeline_events').select('*');
+      if (data) setEvents(data);
+    };
+    fetchEvents();
     setIsLoaded(true);
   }, []);
-
-  // Save to local storage
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('timeline_events', JSON.stringify(events));
-    }
-  }, [events, isLoaded]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -400,47 +343,71 @@ export default function Timeline() {
     }
   };
 
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (newEvent.title && newEvent.date) {
-      setEvents([
-        ...events,
-        {
-          id: Math.max(...events.map((e) => e.id), 0) + 1,
-          ...newEvent,
-          color: newEvent.color,
-          likes: 0,
-          images: newEvent.imageUrl ? [newEvent.imageUrl] : ['https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&h=600&fit=crop'],
-          comments: [],
-        },
-      ]);
-      setNewEvent({ title: '', description: '', date: '', icon: '💕', imageUrl: '', color: 'amber' });
-      setShowAddForm(false);
+      const eventToAdd = {
+        ...newEvent,
+        color: newEvent.color,
+        likes: 0,
+        images: newEvent.imageUrl ? [newEvent.imageUrl] : ['https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&h=600&fit=crop'],
+        comments: [],
+      };
+
+      const { data, error } = await supabase.from('timeline_events').insert([eventToAdd]).select();
+      
+      if (data) {
+        setEvents([...events, ...data]);
+        setNewEvent({ title: '', description: '', date: '', icon: '💕', imageUrl: '', color: 'amber' });
+        setShowAddForm(false);
+      }
     }
   };
 
-  const handleDeleteEvent = (id: number) => {
-    setEvents(events.filter((e) => e.id !== id));
+  const handleDeleteEvent = async (id: number | string) => {
+    const { error } = await supabase.from('timeline_events').delete().eq('id', id);
+    if (!error) setEvents(events.filter((e) => e.id !== id));
   };
 
-  const handleLikeEvent = (id: number) => {
-    setEvents(events.map((e) => e.id === id ? { ...e, likes: e.likes + 1 } : e));
+  const handleLikeEvent = async (id: number | string) => {
+    const event = events.find(e => e.id === id);
+    if (event) {
+      const newLikes = event.likes + 1;
+      const { error } = await supabase.from('timeline_events').update({ likes: newLikes }).eq('id', id);
+      if (!error) setEvents(events.map((e) => e.id === id ? { ...e, likes: newLikes } : e));
+    }
   };
 
-  const handleEditEvent = (id: number, updatedEvent: Partial<TimelineEvent>) => {
-    setEvents(events.map((e) => e.id === id ? { ...e, ...updatedEvent } : e));
+  const handleEditEvent = async (id: number | string, updatedEvent: Partial<TimelineEvent>) => {
+    const { error } = await supabase.from('timeline_events').update(updatedEvent).eq('id', id);
+    if (!error) setEvents(events.map((e) => e.id === id ? { ...e, ...updatedEvent } : e));
   };
 
-  const handleAddComment = (id: number, text: string) => {
+  const handleAddComment = async (id: number | string, text: string) => {
     const newComment: Comment = { id: Date.now(), text, user: 'User' };
-    setEvents(events.map((e) => e.id === id ? { ...e, comments: [...(e.comments || []), newComment] } : e));
+    const event = events.find(e => e.id === id);
+    if (event) {
+      const updatedComments = [...(event.comments || []), newComment];
+      const { error } = await supabase.from('timeline_events').update({ comments: updatedComments }).eq('id', id);
+      if (!error) setEvents(events.map((e) => e.id === id ? { ...e, comments: updatedComments } : e));
+    }
   };
 
-  const handleDeleteComment = (eventId: number, commentId: number) => {
-    setEvents(events.map((e) => e.id === eventId ? { ...e, comments: e.comments.filter(c => c.id !== commentId) } : e));
+  const handleDeleteComment = async (eventId: number | string, commentId: number) => {
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      const updatedComments = event.comments.filter(c => c.id !== commentId);
+      const { error } = await supabase.from('timeline_events').update({ comments: updatedComments }).eq('id', eventId);
+      if (!error) setEvents(events.map((e) => e.id === eventId ? { ...e, comments: updatedComments } : e));
+    }
   };
 
-  const handleEditComment = (eventId: number, commentId: number, text: string) => {
-    setEvents(events.map((e) => e.id === eventId ? { ...e, comments: e.comments.map(c => c.id === commentId ? { ...c, text } : c) } : e));
+  const handleEditComment = async (eventId: number | string, commentId: number, text: string) => {
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      const updatedComments = event.comments.map(c => c.id === commentId ? { ...c, text } : c);
+      const { error } = await supabase.from('timeline_events').update({ comments: updatedComments }).eq('id', eventId);
+      if (!error) setEvents(events.map((e) => e.id === eventId ? { ...e, comments: updatedComments } : e));
+    }
   };
 
   const getGradient = (color: string) => {
@@ -468,7 +435,7 @@ export default function Timeline() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold text-amber-950 mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold text-amber-950 mb-4">
             🕰️ Timeline Momen Penting
           </h2>
           <p className="text-lg text-gray-700 leading-relaxed">Perjalanan kita yang indah</p>

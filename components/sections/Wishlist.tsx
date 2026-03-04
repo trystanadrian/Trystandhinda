@@ -3,9 +3,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { Plus, X, Trash2, CheckCircle2, Circle, Upload, Image as ImageIcon, ArrowUpDown, GripVertical, Search } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface WishlistItem {
-  id: number;
+  id: number | string;
   title: string;
   category: 'place' | 'random' | 'together' | 'small';
   completed: boolean;
@@ -21,19 +22,7 @@ const categoryInfo = {
 };
 
 export default function Wishlist() {
-  const [items, setItems] = useState<WishlistItem[]>(() => {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-    try {
-      const savedItems = localStorage.getItem('wishlist_items');
-      // Jika ada data tersimpan, gunakan itu. Jika tidak, mulai dengan array kosong.
-      return savedItems ? JSON.parse(savedItems) : [];
-    } catch (error) {
-      console.error('Gagal memuat wishlist dari localStorage', error);
-      return [];
-    }
-  });
+  const [items, setItems] = useState<WishlistItem[]>([]);
 
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,14 +43,14 @@ export default function Wishlist() {
     return { total, completed, percentage };
   }, [items]);
 
-  // Save to local storage
+  // Load from Supabase
   useEffect(() => {
-    try {
-      localStorage.setItem('wishlist_items', JSON.stringify(items));
-    } catch (error) {
-      console.error('Gagal menyimpan wishlist ke localStorage', error);
-    }
-  }, [items]);
+    const fetchItems = async () => {
+      const { data } = await supabase.from('wishlist').select('*');
+      if (data) setItems(data);
+    };
+    fetchItems();
+  }, []);
 
   useEffect(() => {
     if (stats.completed === stats.total && stats.total > 0) {
@@ -71,35 +60,43 @@ export default function Wishlist() {
     }
   }, [stats.completed, stats.total]);
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (newItem.title.trim()) {
-      setItems([
-        ...items,
-        {
-          id: Math.max(...items.map((i) => i.id), 0) + 1,
-          ...newItem,
-          completed: false,
-          image: '',
-        },
-      ]);
-      setNewItem({ title: '', category: 'small', description: '', image: '' });
-      setShowAddForm(false);
+      const itemToAdd = {
+        ...newItem,
+        completed: false,
+        image: '',
+      };
+
+      const { data, error } = await supabase.from('wishlist').insert([itemToAdd]).select();
+      
+      if (data) {
+        setItems([...items, ...data]);
+        setNewItem({ title: '', category: 'small', description: '', image: '' });
+        setShowAddForm(false);
+      }
     }
   };
 
-  const handleToggleItem = (id: number) => {
-    setItems(items.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item)));
+  const handleToggleItem = async (id: number | string) => {
+    const item = items.find(i => i.id === id);
+    if (item) {
+      const { error } = await supabase.from('wishlist').update({ completed: !item.completed }).eq('id', id);
+      if (!error) setItems(items.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item)));
+    }
   };
 
-  const handleDeleteItem = (id: number) => {
-    setItems(items.filter((item) => item.id !== id));
+  const handleDeleteItem = async (id: number | string) => {
+    const { error } = await supabase.from('wishlist').delete().eq('id', id);
+    if (!error) setItems(items.filter((item) => item.id !== id));
   };
 
-  const handleImageUpload = (id: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (id: number | string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      setItems(items.map((item) => (item.id === id ? { ...item, image: imageUrl } : item)));
+      const { error } = await supabase.from('wishlist').update({ image: imageUrl }).eq('id', id);
+      if (!error) setItems(items.map((item) => (item.id === id ? { ...item, image: imageUrl } : item)));
     }
   };
 
@@ -145,7 +142,7 @@ export default function Wishlist() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold text-amber-950 mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold text-amber-950 mb-4">
             ✅ Wishlist & Future Plans
           </h2>
           <p className="text-lg text-gray-700 leading-relaxed">Impian dan rencana kita bersama</p>

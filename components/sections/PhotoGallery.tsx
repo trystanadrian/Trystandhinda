@@ -3,59 +3,17 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, useAnimation, useScroll, useTransform } from 'framer-motion';
 import { Search, Heart, X, ZoomIn, ZoomOut, Download, Share2, Filter, ChevronLeft, ChevronRight, Play, Pause, Plus, Upload, Trash2, Edit, Layers } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface GalleryPhoto {
-  id: number;
+  id: number | string;
   url: string;
   title: string;
   category: string;
   liked: boolean;
 }
 
-const mockPhotos: GalleryPhoto[] = [
-  {
-    id: 1,
-    url: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600&h=800&fit=crop',
-    title: 'First Date',
-    category: 'Moments',
-    liked: false,
-  },
-  {
-    id: 2,
-    url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop',
-    title: 'Together',
-    category: 'Selfies',
-    liked: false,
-  },
-  {
-    id: 3,
-    url: 'https://images.unsplash.com/photo-1494822893917-64971a432d2a?w=600&h=600&fit=crop',
-    title: 'Adventure',
-    category: 'Travel',
-    liked: false,
-  },
-  {
-    id: 4,
-    url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&h=900&fit=crop',
-    title: 'Sunset',
-    category: 'Nature',
-    liked: false,
-  },
-  {
-    id: 5,
-    url: 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?w=800&h=500&fit=crop',
-    title: 'Smile',
-    category: 'Selfies',
-    liked: true,
-  },
-  {
-    id: 6,
-    url: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&h=800&fit=crop',
-    title: 'Hiking',
-    category: 'Travel',
-    liked: false,
-  },
-];
+const mockPhotos: GalleryPhoto[] = [];
 
 const categories = ['All', 'Moments', 'Selfies', 'Travel', 'Nature'];
 
@@ -93,25 +51,15 @@ export default function PhotoGallery() {
     return categoryMatch && searchMatch;
   }), [photos, selectedCategory, searchQuery]);
 
-  // Load from Local Storage
+  // Load from Supabase
   useEffect(() => {
-    const saved = localStorage.getItem('gallery_photos');
-    if (saved) {
-      try {
-        setPhotos(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse gallery photos", e);
-      }
-    }
+    const fetchPhotos = async () => {
+      const { data } = await supabase.from('photos').select('*');
+      if (data) setPhotos(data);
+    };
+    fetchPhotos();
     setIsLoaded(true);
   }, []);
-
-  // Save to Local Storage
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('gallery_photos', JSON.stringify(photos));
-    }
-  }, [photos, isLoaded]);
 
   // Responsive Masonry Columns
   useEffect(() => {
@@ -133,8 +81,12 @@ export default function PhotoGallery() {
     return cols;
   }, [filteredPhotos, columns]);
 
-  const toggleLike = (id: number) => {
-    setPhotos(photos.map((p) => (p.id === id ? { ...p, liked: !p.liked } : p)));
+  const toggleLike = async (id: number | string) => {
+    const photo = photos.find(p => p.id === id);
+    if (!photo) return;
+    
+    const { error } = await supabase.from('photos').update({ liked: !photo.liked }).eq('id', id);
+    if (!error) setPhotos(photos.map((p) => (p.id === id ? { ...p, liked: !p.liked } : p)));
   };
 
   const downloadPhoto = (url: string) => {
@@ -240,21 +192,23 @@ export default function PhotoGallery() {
     }
   };
 
-  const handleAddPhotos = () => {
+  const handleAddPhotos = async () => {
     if (newPhotos.length > 0 && uploadData.title) {
-      const newId = Math.max(...photos.map(p => p.id), 0) + 1;
       const newEntries = newPhotos.map((img, idx) => ({
-        id: newId + idx,
         url: img,
         title: newPhotos.length > 1 ? `${uploadData.title} (${idx + 1})` : uploadData.title,
         category: uploadData.category,
         liked: false
       }));
       
-      setPhotos([...newEntries, ...photos]);
-      setNewPhotos([]);
-      setUploadData({ title: '', category: 'Moments' });
-      setShowUploadModal(false);
+      const { data, error } = await supabase.from('photos').insert(newEntries).select();
+      
+      if (data) {
+        setPhotos([...data, ...photos]);
+        setNewPhotos([]);
+        setUploadData({ title: '', category: 'Moments' });
+        setShowUploadModal(false);
+      }
     }
   };
 
@@ -265,12 +219,15 @@ export default function PhotoGallery() {
     }
   };
 
-  const handleDeletePhoto = (id: number) => {
+  const handleDeletePhoto = async (id: number | string) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus foto ini?')) {
-      setPhotos(prev => prev.filter(p => p.id !== id));
-      if (selectedPhoto?.id === id) {
-        setSelectedPhoto(null);
-        setIsPlaying(false);
+      const { error } = await supabase.from('photos').delete().eq('id', id);
+      if (!error) {
+        setPhotos(prev => prev.filter(p => p.id !== id));
+        if (selectedPhoto?.id === id) {
+          setSelectedPhoto(null);
+          setIsPlaying(false);
+        }
       }
     }
   };
@@ -310,7 +267,7 @@ export default function PhotoGallery() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold text-teal-800 mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold text-teal-800 mb-4">
             📸 Our Gallery
           </h2>
           <p className="text-lg text-teal-600">Koleksi momen terbaik kita dalam satu dinding kenangan</p>

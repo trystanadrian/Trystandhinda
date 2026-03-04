@@ -33,7 +33,7 @@ export default function Surprise() {
           viewport={{ once: true }}
           className="mb-16"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent mb-4">
             🎁 Surprise Section
           </h2>
           <p className="text-lg text-teal-700 leading-relaxed">Ada sesuatu untuk kamu...</p>

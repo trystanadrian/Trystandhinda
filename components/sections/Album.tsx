@@ -717,7 +717,7 @@ export default function Album() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-5xl md:text-6xl font-playfair font-bold bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent mb-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-playfair font-bold bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent mb-4">
             📷 Album Kebersamaan
           </h2>
           <p className="text-lg text-teal-700 leading-relaxed">Buku kenangan kita dalam setiap halaman</p>
@@ -759,7 +759,7 @@ export default function Album() {
                   playFlipSound();
                   setIsOpen(true);
                 }}
-                className="relative w-[300px] md:w-[400px] aspect-[3/4] cursor-pointer group"
+                className="relative w-[260px] md:w-[400px] aspect-[3/4] cursor-pointer group"
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Book Spine Effect */}
@@ -806,7 +806,7 @@ export default function Album() {
                     prevPage();
                   }
                 }}
-                className="relative w-full max-w-[600px] md:max-w-[800px] aspect-[3/2] flex items-center justify-center cursor-grab active:cursor-grabbing"
+                className="relative w-full max-w-[95vw] md:max-w-[800px] aspect-[3/2] flex items-center justify-center cursor-grab active:cursor-grabbing"
               >
                 {/* Book Wrapper */}
                 <div className="relative w-full h-full rounded-xl shadow-2xl p-2 md:p-4 flex" style={leatherStyle}>
