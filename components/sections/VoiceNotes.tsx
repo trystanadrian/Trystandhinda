@@ -28,8 +28,12 @@ export default function VoiceNotesRecorder() {
 
   useEffect(() => {
     const fetchNotes = async () => {
-      const { data } = await supabase.from('voice_notes').select('*');
-      if (data) setVoiceNotes(data);
+      try {
+        const { data } = await supabase.from('voice_notes').select('*');
+        if (data) setVoiceNotes(data);
+      } catch (error) {
+        console.error('Error fetching voice notes:', error);
+      }
     };
     fetchNotes();
   }, []);
