@@ -58,24 +58,44 @@ export default function VoiceNotesRecorder() {
         audioChunksRef.current.push(event.data);
       };
 
-      mediaRecorderRef.current.onstop = () => {
+      mediaRecorderRef.current.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(audioBlob);
+        
+        try {
+          // 1. Upload ke Supabase Storage
+          const fileName = `recording-${Date.now()}.webm`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('voice-notes')
+            .upload(fileName, audioBlob);
 
-        const newNote = {
-          duration: `${Math.floor(recordingTime / 60)}:${(recordingTime % 60).toString().padStart(2, '0')}`,
-          timestamp: new Date().toLocaleString('id-ID'),
-          url,
-          sender: 'me',
-          name: `Voice Note #${voiceNotes.length + 1}`,
-        };
+          if (uploadError) throw uploadError;
 
-        supabase.from('voice_notes').insert([newNote]).select().then(({ data }) => {
+          // 2. Dapatkan Public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('voice-notes')
+            .getPublicUrl(uploadData.path);
+
+          // 3. Simpan ke Database
+          const newNote = {
+            duration: `${Math.floor(recordingTime / 60)}:${(recordingTime % 60).toString().padStart(2, '0')}`,
+            timestamp: new Date().toLocaleString('id-ID'),
+            url: publicUrl,
+            sender: 'me',
+            name: `Voice Note #${voiceNotes.length + 1}`,
+          };
+
+          const { data, error } = await supabase.from('voice_notes').insert([newNote]).select();
+          
+          if (error) throw error;
+
           if (data) {
             setVoiceNotes((prev) => [...prev, ...data]);
             setRecordingTime(0);
           }
-        });
+        } catch (error) {
+          console.error('Error saving voice note:', error);
+          alert('Gagal menyimpan voice note. Pastikan tabel dan storage bucket sudah dibuat.');
+        }
       };
 
       mediaRecorderRef.current.start();
@@ -101,27 +121,46 @@ export default function VoiceNotesRecorder() {
     const url = URL.createObjectURL(file);
     const audio = new Audio(url);
     
-    audio.onloadedmetadata = () => {
+    audio.onloadedmetadata = async () => {
         const duration = audio.duration;
         const mins = Math.floor(duration / 60);
         const secs = Math.floor(duration % 60);
         const formattedDuration = `${mins}:${secs.toString().padStart(2, '0')}`;
         
-        const newNote = {
-            duration: formattedDuration,
-            timestamp: new Date().toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-            url,
-            sender: uploadSender,
-            name: customName || file.name
-        };
-        
-        supabase.from('voice_notes').insert([newNote]).select().then(({ data }) => {
+        try {
+          // 1. Upload ke Supabase Storage
+          const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('voice-notes')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          // 2. Dapatkan Public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('voice-notes')
+            .getPublicUrl(uploadData.path);
+
+          const newNote = {
+              duration: formattedDuration,
+              timestamp: new Date().toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+              url: publicUrl,
+              sender: uploadSender,
+              name: customName || file.name
+          };
+          
+          const { data, error } = await supabase.from('voice_notes').insert([newNote]).select();
+          if (error) throw error;
+
           if (data) {
             setVoiceNotes(prev => [...prev, ...data]);
             setCustomName('');
             if (fileInputRef.current) fileInputRef.current.value = '';
           }
-        });
+        } catch (error) {
+          console.error('Error uploading file:', error);
+          alert('Gagal upload file. Cek console untuk detail.');
+        }
     };
   };
 

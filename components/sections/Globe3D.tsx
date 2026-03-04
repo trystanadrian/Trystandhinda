@@ -24,7 +24,7 @@ interface Checkpoint {
   caption: string;
   image: string;
   date: string;
-  isoDate?: string;
+  iso_date?: string;
 }
 
 const LOCATIONS: LocationData[] = [
@@ -98,6 +98,8 @@ export default function Globe3D() {
   const [isSearching, setIsSearching] = useState(false);
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [editForm, setEditForm] = useState({ caption: '', date: '' });
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // LDR Tracker State
   const [ldrDays, setLdrDays] = useState(0);
@@ -133,6 +135,26 @@ export default function Globe3D() {
     if (savedLocations) {
       setLocations(JSON.parse(savedLocations));
     }
+  }, []);
+
+  // Realtime Subscription (Auto Update)
+  useEffect(() => {
+    const channel = supabase
+      .channel('realtime_checkins')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'location_checkins' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setCheckpoints((prev) => [...prev, payload.new as Checkpoint]);
+        } else if (payload.eventType === 'DELETE') {
+          setCheckpoints((prev) => prev.filter((item) => item.id !== payload.old.id));
+        } else if (payload.eventType === 'UPDATE') {
+          setCheckpoints((prev) => prev.map((item) => (item.id === payload.new.id ? (payload.new as Checkpoint) : item)));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Request Notification Permission
@@ -191,6 +213,7 @@ export default function Globe3D() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setNewCheckpointData({ ...newCheckpointData, image: reader.result as string });
@@ -200,31 +223,63 @@ export default function Globe3D() {
   };
 
   const handleSaveCheckpoint = async () => {
-    if (tempMarker && newCheckpointData.image) {
-      const dateObj = newCheckpointData.date ? new Date(newCheckpointData.date) : new Date();
-      const formattedDate = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-      const isoDate = newCheckpointData.date || dateObj.toISOString().split('T')[0];
+    if (!tempMarker) return;
 
-      const newPoint = {
-        lat: tempMarker.lat,
-        lng: tempMarker.lng,
-        caption: newCheckpointData.caption,
-        image: newCheckpointData.image,
-        date: formattedDate,
-        isoDate: isoDate
-      }; 
+    setIsUploading(true);
+
+    try {
+      let imageUrl = "";
+
+      if (selectedFile) {
+        console.log(selectedFile);
+        const fileName = `checkpoint-${Date.now()}-${selectedFile.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('ldr-tracker')
+          .upload(fileName, selectedFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('ldr-tracker')
+          .getPublicUrl(uploadData.path);
+
+        imageUrl = publicUrl;
+      }
+
+      const dateObj = newCheckpointData.date ? new Date(newCheckpointData.date) : new Date();
+      const formattedDate = dateObj.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+
+      const isoDate = newCheckpointData.date || dateObj.toISOString().split('T')[0];
 
       const { data, error } = await supabase
         .from('location_checkins')
-        .insert([newPoint])
+        .insert([{
+          lat: tempMarker.lat,
+          lng: tempMarker.lng,
+          caption: newCheckpointData.caption,
+          image: imageUrl,
+          date: formattedDate,
+          iso_date: isoDate
+        }])
         .select();
 
-      if (data) {
-        setCheckpoints([...checkpoints, ...data]);
-        setTempMarker(null);
-        setNewCheckpointData({ caption: '', image: '', date: '' });
-        setIsAddingMarker(false);
-      }
+      if (error) throw error;
+
+      setTempMarker(null);
+      setNewCheckpointData({ caption: '', image: '', date: '' });
+      setSelectedFile(null);
+      setIsAddingMarker(false);
+
+    } catch (err) {
+      console.error("SAVE ERROR:", err);
+      alert("Gagal menyimpan, cek console.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -242,7 +297,7 @@ export default function Globe3D() {
     setEditingId(point.id);
     setEditForm({ 
       caption: point.caption, 
-      date: point.isoDate || new Date().toISOString().split('T')[0] 
+      date: point.iso_date || new Date().toISOString().split('T')[0] 
     });
   };
 
@@ -253,7 +308,7 @@ export default function Globe3D() {
     
     const { error } = await supabase
       .from('location_checkins')
-      .update({ caption: editForm.caption, date: formattedDate, isoDate: editForm.date })
+      .update({ caption: editForm.caption, date: formattedDate, iso_date: editForm.date })
       .eq('id', editingId);
 
     if (!error) {
@@ -261,7 +316,7 @@ export default function Globe3D() {
         ...p,
         caption: editForm.caption,
         date: formattedDate,
-        isoDate: editForm.date
+        iso_date: editForm.date
       } : p));
     }
     setEditingId(null);
@@ -286,14 +341,22 @@ export default function Globe3D() {
     });
   };
 
-  const handleCheckpointDragEnd = (id: number | string, e: any) => {
+  const handleCheckpointDragEnd = async (id: number | string, e: any) => {
     const marker = e.target;
     const position = marker.getLatLng();
+    
+    // Optimistic update (Update tampilan dulu biar cepat)
     setCheckpoints(prev => {
       return prev.map(point => 
         point.id === id ? { ...point, lat: position.lat, lng: position.lng } : point
       );
     });
+
+    // Save to Supabase (Simpan ke database)
+    await supabase.from('location_checkins').update({ 
+      lat: position.lat, 
+      lng: position.lng 
+    }).eq('id', id);
   };
 
   const addToGoogleCalendar = () => {
@@ -485,7 +548,7 @@ export default function Globe3D() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="absolute bottom-4 left-4 right-4 bg-white p-4 rounded-xl shadow-xl z-[1000] border border-cyan-200"
+              className="absolute bottom-4 left-4 right-4 bg-white p-4 rounded-xl shadow-2xl z-[1000] border-2 border-cyan-100"
             >
               <div className="flex justify-between items-center mb-3">
                 <h4 className="font-bold text-teal-800">Tambah Kenangan Baru</h4>
@@ -493,14 +556,14 @@ export default function Globe3D() {
               </div>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-cyan-300 rounded-lg hover:bg-cyan-50 transition text-gray-600 text-sm">
+                  <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border-2 border-dashed border-cyan-300 rounded-lg hover:bg-cyan-50 transition text-gray-600 text-sm">
                     <Upload size={16} />
                     <span className="truncate">{newCheckpointData.image ? 'Ganti Foto' : 'Upload Foto'}</span>
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                   </label>
                   {newCheckpointData.image && (
                     <div 
-                      className="w-10 h-10 rounded overflow-hidden border border-gray-200 cursor-zoom-in hover:ring-2 hover:ring-cyan-400 transition"
+                      className="w-10 h-10 rounded overflow-hidden border border-gray-200 cursor-zoom-in hover:ring-2 hover:ring-cyan-400 transition bg-white"
                       onClick={() => setZoomedImage(newCheckpointData.image)}
                       title="Klik untuk memperbesar"
                     >
@@ -512,21 +575,27 @@ export default function Globe3D() {
                   type="date"
                   value={newCheckpointData.date}
                   onChange={(e) => setNewCheckpointData({ ...newCheckpointData, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 />
                 <input
                   type="text"
                   placeholder="Tulis caption momen ini..."
                   value={newCheckpointData.caption}
                   onChange={(e) => setNewCheckpointData({ ...newCheckpointData, caption: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 />
                 <button
                   onClick={handleSaveCheckpoint}
-                  disabled={!newCheckpointData.image}
-                  className="w-full py-2 bg-teal-500 text-white rounded-lg font-semibold text-sm hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  disabled={!newCheckpointData.image || isUploading}
+                  className="w-full py-2 bg-teal-500 text-white rounded-lg font-semibold text-sm hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md flex justify-center items-center gap-2"
                 >
-                  Simpan Lokasi
+                  {isUploading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" /> Menyimpan...
+                    </>
+                  ) : (
+                    'Simpan Lokasi'
+                  )}
                 </button>
               </div>
             </motion.div>

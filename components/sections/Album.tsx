@@ -129,7 +129,7 @@ const PolaroidLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) =
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-6 bg-transparent relative">
+    <div className="flex flex-col items-center justify-center h-full p-2 md:p-6 bg-transparent relative">
       <div className="absolute top-0 left-0 w-full h-full opacity-5 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
       <motion.div
         drag
@@ -142,17 +142,17 @@ const PolaroidLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) =
         }}
         whileHover={{ scale: 1.05, rotate: Math.random() * 6 - 3, cursor: 'grab', zIndex: 20 }}
         whileDrag={{ scale: 1.1, rotate: 0, cursor: 'grabbing', zIndex: 20 }}
-        className="bg-white p-3 pb-10 md:p-4 md:pb-12 shadow-xl rotate-2 relative max-w-[85%]"
+        className="bg-white p-2 pb-6 md:p-4 md:pb-12 shadow-xl rotate-2 relative max-w-[85%] md:max-w-[85%] w-full"
       >
-        <div className="aspect-square overflow-hidden bg-gray-100 mb-2 border border-gray-100 cursor-zoom-in" onClick={() => onZoom(data.image)}>
-          {renderMedia(data.image, "w-full h-full object-cover filter contrast-110 pointer-events-none")}
+        <div className="aspect-square md:aspect-square overflow-hidden bg-gray-100 mb-2 border border-gray-100 cursor-zoom-in" onClick={() => onZoom(data.image)}>
+          {renderMedia(data.image, "w-full h-full object-contain md:object-cover filter contrast-110 pointer-events-none")}
         </div>
-        <p className="font-playfair text-center text-gray-800 absolute bottom-4 left-0 right-0 italic text-sm pointer-events-none">{data.date}</p>
+        <p className="font-playfair text-center text-gray-800 absolute bottom-2 md:bottom-4 left-0 right-0 italic text-[10px] md:text-sm pointer-events-none">{data.date}</p>
       </motion.div>
-      <div className="mt-4 md:mt-8 relative z-10 bg-white/80 backdrop-blur-sm p-3 md:p-4 rounded-lg shadow-sm border border-gray-100 max-w-full pointer-events-none">
-        <p className="text-center font-serif text-gray-700 italic text-xs md:text-sm">"{data.story}"</p>
-        <div className="mt-2 flex justify-center items-center gap-2 text-xs text-rose-500 font-semibold uppercase tracking-wider">
-            <Heart size={12} fill="currentColor" /> {data.emotion}
+      <div className="mt-2 md:mt-8 relative z-10 bg-white/80 backdrop-blur-sm p-2 md:p-4 rounded-lg shadow-sm border border-gray-100 max-w-full pointer-events-none">
+        <p className="text-center font-serif text-gray-700 italic text-[10px] md:text-sm leading-snug">"{data.story}"</p>
+        <div className="mt-1 md:mt-2 flex justify-center items-center gap-1 md:gap-2 text-[10px] md:text-xs text-rose-500 font-semibold uppercase tracking-wider">
+            <Heart size={10} className="md:w-3 md:h-3" fill="currentColor" /> {data.emotion}
         </div>
       </div>
     </div>
@@ -160,15 +160,15 @@ const PolaroidLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) =
 };
 
 const FullLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) => void }) => (
-  <div className="relative w-full h-full overflow-hidden">
+  <div className="relative w-full h-full overflow-hidden bg-gray-900">
     {renderMedia(data.image, "w-full h-full object-cover cursor-zoom-in", () => onZoom(data.image))}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 text-white">
-      <div className="border-l-4 border-teal-400 pl-4">
-        <p className="font-playfair text-2xl font-bold mb-2">{data.date}</p>
-        <p className="text-sm opacity-90 italic leading-relaxed text-justify">"{data.story}"</p>
+    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-4 md:p-10 text-white">
+      <div className="border-l-2 md:border-l-4 border-teal-400 pl-3 md:pl-4 mb-2">
+        <p className="font-playfair text-base md:text-3xl font-bold mb-1 md:mb-2">{data.date}</p>
+        <p className="text-[10px] md:text-base opacity-90 italic leading-relaxed text-justify">"{data.story}"</p>
       </div>
-      <div className="mt-4 flex gap-2">
-        <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-medium border border-white/30">
+      <div className="mt-2 md:mt-4 flex gap-2">
+        <span className="inline-block px-2 py-0.5 md:px-3 md:py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] md:text-xs font-medium border border-white/30">
           {data.emotion}
         </span>
       </div>
@@ -293,52 +293,52 @@ const ScrapbookLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) 
   };
 
   return (
-    <div className="w-full h-full p-6 relative overflow-hidden bg-[#fdfbf7] flex flex-col justify-center items-center">
+    <div className="w-full h-full p-2 md:p-6 relative overflow-hidden bg-[#fdfbf7] flex flex-col justify-center items-center">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#444 0.5px, transparent 0.5px)', backgroundSize: '10px 10px' }}></div>
       
       {/* Add Note Buttons */}
-      <div className="absolute top-4 left-4 z-50 flex flex-col gap-2">
+      <div className="absolute top-2 left-2 md:top-4 md:left-4 z-50 flex flex-col gap-1 md:gap-2">
         <button
           onClick={() => addNote('bg-yellow-200')}
-          className="p-2 bg-yellow-300 text-yellow-900 rounded-full shadow-lg hover:bg-yellow-400 transition-colors"
+          className="p-1.5 md:p-2 bg-yellow-300 text-yellow-900 rounded-full shadow-lg hover:bg-yellow-400 transition-colors"
           title="Catatan Kuning"
         >
-          <Plus size={16} />
+          <Plus size={12} className="md:w-4 md:h-4" />
         </button>
         <button
           onClick={() => addNote('bg-pink-200')}
-          className="p-2 bg-pink-300 text-pink-900 rounded-full shadow-lg hover:bg-pink-400 transition-colors"
+          className="p-1.5 md:p-2 bg-pink-300 text-pink-900 rounded-full shadow-lg hover:bg-pink-400 transition-colors"
           title="Catatan Pink"
         >
-          <Plus size={16} />
+          <Plus size={12} className="md:w-4 md:h-4" />
         </button>
         <button
           onClick={() => addNote('bg-blue-200')}
-          className="p-2 bg-blue-300 text-blue-900 rounded-full shadow-lg hover:bg-blue-400 transition-colors"
+          className="p-1.5 md:p-2 bg-blue-300 text-blue-900 rounded-full shadow-lg hover:bg-blue-400 transition-colors"
           title="Catatan Biru"
         >
-          <Plus size={16} />
+          <Plus size={12} className="md:w-4 md:h-4" />
         </button>
       </div>
 
       {/* Decorations */}
-      <div className="absolute top-8 right-8 text-yellow-400 opacity-80 animate-pulse"><Star size={32} fill="currentColor" /></div>
-      <div className="absolute bottom-20 left-4 text-pink-400 opacity-60"><Heart size={24} fill="currentColor" /></div>
+      <div className="absolute top-4 right-4 md:top-8 md:right-8 text-yellow-400 opacity-80 animate-pulse"><Star size={20} className="md:w-8 md:h-8" fill="currentColor" /></div>
+      <div className="absolute bottom-10 left-2 md:bottom-20 md:left-4 text-pink-400 opacity-60"><Heart size={16} className="md:w-6 md:h-6" fill="currentColor" /></div>
       <div className="absolute top-1/2 right-2 w-16 h-16 bg-teal-100 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
       
       {/* Photo */}
-      <div className="relative bg-white p-2 shadow-lg rotate-[-3deg] border-4 border-white max-w-[80%] mx-auto z-10 mt-2">
+      <div className="relative bg-white p-1 md:p-2 shadow-lg rotate-[-3deg] border-2 md:border-4 border-white max-w-[85%] md:max-w-[80%] mx-auto z-10 mt-0 md:mt-2">
           <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-8 bg-rose-200/80 rotate-1 shadow-sm z-10"></div>
           {renderMedia(data.image, "w-full aspect-[4/3] object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-500 cursor-zoom-in", () => onZoom(data.image))}
       </div>
       
       {/* Note */}
-      <div className="mt-4 bg-[#fff9c4] p-4 shadow-md rotate-1 border border-yellow-200 relative max-w-[85%] mx-auto transform hover:scale-105 transition-transform z-10">
+      <div className="mt-2 md:mt-4 bg-[#fff9c4] p-2 md:p-4 shadow-md rotate-1 border border-yellow-200 relative max-w-[90%] md:max-w-[85%] mx-auto transform hover:scale-105 transition-transform z-10">
           <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-200 rounded-full opacity-50"></div>
-          <p className="font-playfair text-gray-800 font-bold text-lg mb-1">Dear Diary,</p>
-          <p className="font-serif text-gray-700 text-sm leading-relaxed text-justify">{data.story}</p>
-          <p className="text-xs text-gray-500 mt-2 text-right font-mono">{data.date}</p>
+          <p className="font-playfair text-gray-800 font-bold text-sm md:text-lg mb-0.5 md:mb-1">Dear Diary,</p>
+          <p className="font-serif text-gray-700 text-[10px] md:text-sm leading-tight md:leading-relaxed text-justify">{data.story}</p>
+          <p className="text-[8px] md:text-xs text-gray-500 mt-1 md:mt-2 text-right font-mono">{data.date}</p>
       </div>
 
       {/* Sticky Notes */}
@@ -394,64 +394,64 @@ const ScrapbookLayout = ({ data, onZoom }: { data: Photo; onZoom: (url: string) 
 };
 
 const ChapterLayout = ({ title, subtitle }: { title: string, subtitle: string }) => (
-  <div className="w-full h-full flex items-center justify-center p-6">
-    <div className="w-full h-full flex flex-col items-center justify-center bg-teal-50/30 p-8 border-4 border-double border-teal-100 rounded-lg text-center">
-      <div className="mb-4 inline-block p-3 bg-white rounded-full shadow-md">
-        <Book size={32} className="text-teal-600" />
+  <div className="w-full h-full flex items-center justify-center p-2 md:p-6">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-teal-50/30 p-4 md:p-8 border-2 md:border-4 border-double border-teal-100 rounded-lg text-center">
+      <div className="mb-2 md:mb-4 inline-block p-2 md:p-3 bg-white rounded-full shadow-md">
+        <Book size={20} className="md:w-8 md:h-8 text-teal-600" />
       </div>
-      <h2 className="text-3xl md:text-4xl font-playfair font-bold text-teal-900 mb-2">{title}</h2>
-      <div className="h-1 w-20 bg-teal-300 mx-auto mb-4 rounded-full"></div>
-      <p className="text-gray-600 font-serif italic">{subtitle}</p>
+      <h2 className="text-xl md:text-4xl font-playfair font-bold text-teal-900 mb-1 md:mb-2">{title}</h2>
+      <div className="h-0.5 md:h-1 w-12 md:w-20 bg-teal-300 mx-auto mb-2 md:mb-4 rounded-full"></div>
+      <p className="text-gray-600 font-serif italic text-xs md:text-base">{subtitle}</p>
     </div>
   </div>
 );
 
 const IntroLayout = () => (
-  <div className="w-full h-full flex flex-col items-center justify-center bg-[#fdfbf7] p-8 text-center">
-    <h1 className="text-4xl md:text-5xl font-playfair font-bold text-amber-950 mb-4">Our Story</h1>
-    <p className="text-lg text-gray-600 font-serif italic mb-8">"Every picture tells a story, but ours is my favorite."</p>
-    <div className="flex gap-2 text-rose-400">
-      <Heart fill="currentColor" size={20} />
-      <Heart fill="currentColor" size={20} />
-      <Heart fill="currentColor" size={20} />
+  <div className="w-full h-full flex flex-col items-center justify-center bg-[#fdfbf7] p-4 md:p-8 text-center">
+    <h1 className="text-2xl md:text-5xl font-playfair font-bold text-amber-950 mb-2 md:mb-4">Our Story</h1>
+    <p className="text-sm md:text-lg text-gray-600 font-serif italic mb-4 md:mb-8">"Every picture tells a story, but ours is my favorite."</p>
+    <div className="flex gap-1 md:gap-2 text-rose-400">
+      <Heart fill="currentColor" size={14} className="md:w-5 md:h-5" />
+      <Heart fill="currentColor" size={14} className="md:w-5 md:h-5" />
+      <Heart fill="currentColor" size={14} className="md:w-5 md:h-5" />
     </div>
-    <p className="mt-12 text-sm text-gray-400 uppercase tracking-widest">Volume 1 • 2017</p>
+    <p className="mt-6 md:mt-12 text-[10px] md:text-sm text-gray-400 uppercase tracking-widest">Volume 1 • 2017</p>
   </div>
 );
 
 const OverviewLayout = () => (
-  <div className="w-full h-full flex flex-col items-center justify-center bg-[#fdfbf7] p-4 md:p-8 relative border-4 md:border-8 border-double border-teal-50">
-    <div className="absolute top-2 left-2 md:top-4 md:left-4 text-teal-200"><Sparkles size={24} /></div>
-    <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 text-rose-200"><Heart size={24} /></div>
+  <div className="w-full h-full flex flex-col items-center justify-center bg-[#fdfbf7] p-2 md:p-8 relative border-2 md:border-8 border-double border-teal-50">
+    <div className="absolute top-2 left-2 md:top-4 md:left-4 text-teal-200"><Sparkles size={16} className="md:w-6 md:h-6" /></div>
+    <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 text-rose-200"><Heart size={16} className="md:w-6 md:h-6" /></div>
     
-    <h2 className="text-2xl md:text-4xl font-playfair font-bold text-teal-900 mb-6 md:mb-8 border-b-2 border-teal-200 pb-2 md:pb-4">Our Journey</h2>
+    <h2 className="text-lg md:text-4xl font-playfair font-bold text-teal-900 mb-4 md:mb-8 border-b md:border-b-2 border-teal-200 pb-1 md:pb-4">Our Journey</h2>
     
-    <div className="space-y-4 md:space-y-6 w-full max-w-[240px] md:max-w-xs">
-      <div className="flex items-center gap-3 md:gap-4 group">
-        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-sm md:text-base group-hover:scale-110 transition">1</div>
+    <div className="space-y-2 md:space-y-6 w-full max-w-[200px] md:max-w-xs">
+      <div className="flex items-center gap-2 md:gap-4 group">
+        <div className="w-6 h-6 md:w-10 md:h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs md:text-base group-hover:scale-110 transition">1</div>
         <div>
-          <p className="font-bold text-gray-800 text-sm md:text-base">2017</p>
-          <p className="text-xs md:text-sm text-gray-500 italic">Where it all began</p>
+          <p className="font-bold text-gray-800 text-xs md:text-base">2017</p>
+          <p className="text-[10px] md:text-sm text-gray-500 italic">Where it all began</p>
         </div>
       </div>
       
-      <div className="w-0.5 h-4 md:h-6 bg-gray-200 ml-4 md:ml-5"></div>
+      <div className="w-0.5 h-2 md:h-6 bg-gray-200 ml-3 md:ml-5"></div>
       
-      <div className="flex items-center gap-3 md:gap-4 group">
-        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-sm md:text-base group-hover:scale-110 transition">2</div>
+      <div className="flex items-center gap-2 md:gap-4 group">
+        <div className="w-6 h-6 md:w-10 md:h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-xs md:text-base group-hover:scale-110 transition">2</div>
         <div>
-          <p className="font-bold text-gray-800 text-sm md:text-base">2025</p>
-          <p className="text-xs md:text-sm text-gray-500 italic">Reconnected</p>
+          <p className="font-bold text-gray-800 text-xs md:text-base">2025</p>
+          <p className="text-[10px] md:text-sm text-gray-500 italic">Reconnected</p>
         </div>
       </div>
 
-      <div className="w-0.5 h-4 md:h-6 bg-gray-200 ml-4 md:ml-5"></div>
+      <div className="w-0.5 h-2 md:h-6 bg-gray-200 ml-3 md:ml-5"></div>
 
-      <div className="flex items-center gap-3 md:gap-4 group">
-        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-sm md:text-base group-hover:scale-110 transition">3</div>
+      <div className="flex items-center gap-2 md:gap-4 group">
+        <div className="w-6 h-6 md:w-10 md:h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-xs md:text-base group-hover:scale-110 transition">3</div>
         <div>
-          <p className="font-bold text-gray-800 text-sm md:text-base">2026</p>
-          <p className="text-xs md:text-sm text-gray-500 italic">Building future</p>
+          <p className="font-bold text-gray-800 text-xs md:text-base">2026</p>
+          <p className="text-[10px] md:text-sm text-gray-500 italic">Building future</p>
         </div>
       </div>
     </div>
@@ -459,33 +459,33 @@ const OverviewLayout = () => (
 );
 
 const ConfessionLayout = ({ part }: { part: 1 | 2 }) => (
-  <div className="w-full h-full flex flex-col items-center justify-center bg-[#0f0f0f] text-white p-8 relative overflow-hidden border-4 border-double border-rose-900/40">
+  <div className="w-full h-full flex flex-col items-center justify-center bg-[#0f0f0f] text-white p-2 md:p-12 relative overflow-hidden border-2 md:border-4 border-double border-rose-900/40">
     <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
     <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-rose-900/10 to-transparent pointer-events-none"></div>
     
     {part === 1 ? (
-      <div className="relative z-10 max-w-xs text-center">
+      <div className="relative z-10 max-w-md text-center">
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1 }}
-          className="mb-8 text-rose-400 opacity-90"
+          className="mb-2 md:mb-8 text-rose-400 opacity-90"
         >
-            <Sparkles size={40} className="mx-auto animate-pulse" />
+            <Sparkles size={24} className="mx-auto animate-pulse md:w-10 md:h-10" />
         </motion.div>
-        <h3 className="font-playfair text-2xl mb-6 text-rose-200 tracking-[0.2em] uppercase border-b border-rose-800 pb-4 inline-block">The Truth</h3>
-        <p className="font-serif italic leading-loose text-gray-300 text-sm md:text-base">
+        <h3 className="font-playfair text-sm md:text-3xl mb-2 md:mb-6 text-rose-200 tracking-[0.2em] uppercase border-b border-rose-800 pb-1 md:pb-4 inline-block">The Truth</h3>
+        <p className="font-serif italic leading-snug md:leading-loose text-gray-300 text-[9px] md:text-lg">
           "Mungkin awalnya terasa seperti kamu yang memulai, tapi sebenarnya hati kita bergerak di frekuensi yang sama. Cinta ini bukan tentang siapa yang lebih dulu, tapi tentang kita yang saling menyambut..."
         </p>
       </div>
     ) : (
-      <div className="relative z-10 max-w-xs text-center">
-        <div className="absolute -top-20 -right-20 text-rose-500/10 animate-spin-slow"><Star size={120} /></div>
-        <p className="font-playfair text-xl md:text-2xl mb-8 leading-relaxed text-white/90">
+      <div className="relative z-10 max-w-md text-center">
+        <div className="absolute -top-10 -right-10 md:-top-20 md:-right-20 text-rose-500/10 animate-spin-slow"><Star size={60} className="md:w-[120px] md:h-[120px]" /></div>
+        <p className="font-playfair text-[10px] md:text-2xl mb-2 md:mb-8 leading-snug md:leading-relaxed text-white/90">
           "...bahwa seiring berjalannya waktu, rasa sayangku tumbuh jauh lebih besar. Makin lama, makin dalam, makin tak tergantikan. Aku makin sayang kamu."
         </p>
-        <div className="mt-8">
-           <p className="text-rose-400 font-mono text-xs tracking-[0.3em]">10 FEBRUARI 2026</p>
+        <div className="mt-2 md:mt-8">
+           <p className="text-rose-400 font-mono text-[10px] md:text-xs tracking-[0.3em]">10 FEBRUARI 2026</p>
         </div>
       </div>
     )}
@@ -505,17 +505,17 @@ const CollageLayout = ({ text, subtext, variant, onZoom }: { text: string, subte
   ];
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-[#fdfbf7] p-4 flex flex-col items-center justify-center">
+    <div className="w-full h-full relative overflow-hidden bg-[#fdfbf7] p-2 md:p-4 flex flex-col items-center justify-center">
       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)', backgroundSize: '10px 10px' }}></div>
       
-      <div className="relative z-10 text-center mb-6">
-         <h3 className="text-2xl md:text-3xl font-playfair font-bold text-teal-900 mb-2 drop-shadow-sm">
+      <div className="relative z-10 text-center mb-2 md:mb-6">
+         <h3 className="text-lg md:text-3xl font-playfair font-bold text-teal-900 mb-1 md:mb-2 drop-shadow-sm">
             {text}
          </h3>
-         {subtext && <p className="text-sm md:text-base text-rose-500 font-serif italic">{subtext}</p>}
+         {subtext && <p className="text-xs md:text-base text-rose-500 font-serif italic">{subtext}</p>}
       </div>
 
-      <div className="w-full flex-1 grid gap-3 md:gap-4 grid-cols-2">
+      <div className="w-full flex-1 grid gap-2 md:gap-4 grid-cols-2">
          {(variant === 1 ? photos1 : photos2).map((src, i) => (
              <div key={i} className={`relative rounded-lg overflow-hidden shadow-md transition duration-300 ${
                 variant === 1 
@@ -543,8 +543,8 @@ const FutureLayout = ({ onZoom }: { onZoom: (url: string) => void }) => (
       <p className="text-gray-600 font-serif italic text-[10px] md:text-base">"Katanya mau 2 anak, cowok sama cewek"</p>
     </div>
 
-    <div className="flex-1 w-full flex flex-col items-center justify-center gap-2 md:gap-3 max-w-5xl z-10">
-      <div className="flex flex-col items-center w-full max-w-[170px] md:max-w-[240px] mt-6">
+    <div className="flex-1 w-full flex flex-col items-center justify-center gap-1 md:gap-3 max-w-5xl z-10">
+      <div className="flex flex-col items-center w-full max-w-[170px] md:max-w-[240px]">
         <div className="w-full aspect-[16/9] bg-white p-1 md:p-2 shadow-xl rotate-[-2deg] hover:rotate-0 transition-transform duration-300 rounded-sm border border-gray-100">
            {renderMedia("/images/Album/13.webp", "w-full h-full object-cover cursor-zoom-in", () => onZoom("/images/Album/13.webp"))}
         </div>
@@ -708,7 +708,7 @@ export default function Album() {
   };
 
   return (
-    <section id="album" className="py-24 px-6 md:px-12 bg-gradient-to-b from-transparent to-cyan-50/30">
+    <section id="album" className="py-24 px-4 md:px-12 bg-gradient-to-b from-transparent to-cyan-50/30">
       <div className="max-w-6xl mx-auto">
         {/* Section Title */}
         <motion.div
@@ -759,7 +759,7 @@ export default function Album() {
                   playFlipSound();
                   setIsOpen(true);
                 }}
-                className="relative w-[260px] md:w-[400px] aspect-[3/4] cursor-pointer group"
+                className="relative w-[70vw] max-w-[300px] md:w-[400px] aspect-[3/4] cursor-pointer group"
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Book Spine Effect */}
@@ -806,7 +806,7 @@ export default function Album() {
                     prevPage();
                   }
                 }}
-                className="relative w-full max-w-[95vw] md:max-w-[800px] aspect-[3/2] flex items-center justify-center cursor-grab active:cursor-grabbing"
+                className="relative w-full md:max-w-[1000px] aspect-square md:aspect-[3/2] flex items-center justify-center cursor-grab active:cursor-grabbing"
               >
                 {/* Book Wrapper */}
                 <div className="relative w-full h-full rounded-xl shadow-2xl p-2 md:p-4 flex" style={leatherStyle}>
@@ -883,7 +883,7 @@ export default function Album() {
                   </div>
 
                   {/* Navigation Instructions */}
-                  <div className="absolute -bottom-12 left-0 right-0 text-center text-teal-700 font-medium opacity-70">
+                  <div className="absolute -bottom-16 md:-bottom-12 left-0 right-0 text-center text-teal-700 font-medium opacity-70 text-sm md:text-base">
                     Geser halaman untuk membalik ↔️
                   </div>
 
